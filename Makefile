@@ -16,15 +16,14 @@ endif
 
 UMPS2_DATA_DIR = $(UMPS2_DIR_PREFIX)/share/umps2
 UMPS2_INCLUDE_DIR = $(UMPS2_DIR_PREFIX)/include/umps2
-UMPS2_LIB_DIR = $(UMPS2_DIR_PREFIX)/lib/umps2
 
 # Compiler options
-CFLAGS_LANG = -ffreestanding -ansi
-CFLAGS_MIPS = -mips1 -mabi=32 -mno-gpopt -G 0 -mno-abicalls -fno-pic -mfp32 -std=c99
-CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS2_INCLUDE_DIR) -I. -Wall -O0
+CFLAGS_LANG = -ansi
+CFLAGS_MIPS = -mips1 -mfp32 -std=c99
+CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS2_INCLUDE_DIR) -I.
 
 # Linker options
-LDFLAGS = -G 0 -nostdlib -T $(UMPS2_DATA_DIR)/umpscore.ldscript
+LDFLAGS = -nostdlib -T $(UMPS2_DATA_DIR)/umpscore.ldscript
 
 # Add the location of crt*.S to the search path
 VPATH = $(UMPS2_DATA_DIR)
@@ -43,6 +42,5 @@ clean :
 	find . -name "*.o" -o -name "kernel" -o -name "kernel.*.umps" -o -name "term*.umps" -type f|xargs rm -f
 
 # Pattern rule for assembly modules
-
 %.o : %.S
 	$(CC) $(CFLAGS) -c -o $@ $<
