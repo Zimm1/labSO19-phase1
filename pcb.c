@@ -54,7 +54,7 @@ void insertProcQ(struct list_head *head, pcb_t *p) {
 	pcb_t *currentP;
 	list_for_each_entry(currentP, head, p_next) {
     	if (p->priority > currentP->priority) {
-    		__list_add(&p->p_next, (p->p_next).prev, &p->p_next);
+    		list_add(&p->p_next, currentP->p_next.prev);
     		return;
     	}
 	}
