@@ -1,13 +1,13 @@
 #include "pcb.h"
 #include "const.h"
 
-static pcb_t pcbfree_h;
-static pcb_t pcbFree_table[MAXPROC];
+HIDDEN pcb_t pcbfree_h;
+HIDDEN pcb_t pcbFree_table[MAXPROC];
 
 void initPcbs(void) {
 	mkEmptyProcQ(&pcbfree_h.p_next);
-	int i;
-	for (i = 0; i < MAXPROC; ++i) {
+
+	for (int i = 0; i < MAXPROC; ++i) {
 		freePcb(&pcbFree_table[i]);
 	}
 }
@@ -110,7 +110,7 @@ pcb_t *removeChild(pcb_t *p) {
 }
 
 pcb_t *outChild(pcb_t *p) {
-	if (p->p_parent = NULL) {
+	if (p->p_parent == NULL) {
 		return NULL;
 	}
 
