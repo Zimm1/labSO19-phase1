@@ -19,8 +19,8 @@ UMPS2_INCLUDE_DIR = $(UMPS2_DIR_PREFIX)/include/umps2
 
 # Compiler options
 CFLAGS_LANG = -ansi
-CFLAGS_MIPS = -mips1 -mfp32 -std=c99
-CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS2_INCLUDE_DIR) -I.
+CFLAGS_MIPS = -mips1 -mfp32 -std=gnu11
+CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS2_INCLUDE_DIR) -I. -Wall
 
 # Linker options
 LDFLAGS = -nostdlib -T $(UMPS2_DATA_DIR)/umpscore.ldscript
