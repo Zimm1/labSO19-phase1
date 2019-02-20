@@ -6,6 +6,12 @@ HIDDEN struct list_head semdfree_h;
 HIDDEN struct list_head semd_h;
 HIDDEN semd_t semd_table[MAXPROC];
 
+/**
+  * @brief searches a semaphore descriptor in the ASL (active semaphores list).
+  *	@param key : pointer to semaphore descriptor searched.  
+  * @return returns the pointer to SEMD (semaphore descriptor) if it exists in the ASL (active semaphores list), otherwise NULL.
+ */
+
 semd_t* getSemd(int *key) {
 	semd_t *iter;
 	list_for_each_entry(iter, &semd_h, s_next) {
@@ -16,6 +22,11 @@ semd_t* getSemd(int *key) {
 
 	return NULL;
 }
+
+/**
+  * @brief creates the list of unused SEMD (semaphores descriptors).
+  * @return void.
+ */
 
 void initASL() {
 	INIT_LIST_HEAD(&semdfree_h);
@@ -29,6 +40,12 @@ void initASL() {
 	}
 }
 
+/**
+  * @brief inserts the PCB (pointed by p) in the queue of processes blocked associated to SEMD (with value key).
+  * @param key : pointer to SEMD searched.
+  * @param p : pointer to PCB searched in the queue of PCB contained in the SEMD.
+  * @return returns TRUE if it's impossible to allocate a new SEMD because the list of unused semaphores descriptors is empty, otherwise FALSE.
+ */
 
 int insertBlocked(int *key, pcb_t* p) {
 	semd_t *s = getSemd(key);
@@ -66,6 +83,12 @@ int insertBlocked(int *key, pcb_t* p) {
 	return FALSE;
 }
 
+/**
+  * @brief removes the first PCB from the queue of processes blocked associated to SEMD (with value key).
+  * @param key : pointer to SEMD searched.
+  * @return returns NULL if the searched semaphore descriptor doesn't exist in the ASL (active semaphores list), otherwise the removed item.
+ */
+
 pcb_t* removeBlocked(int *key) {
 	semd_t *s = getSemd(key);
 
@@ -85,6 +108,12 @@ pcb_t* removeBlocked(int *key) {
 	return p;
 }
 
+/**
+  * @brief removes the given PCB from the queue of PCB in the SEMD where it is blocked.
+  * @param p : pointer to  PCB to remove.
+  * @return returns NULL if PCB doesn't exist in the PCB queue of SEMD searched, otherwise p.
+ */
+
 pcb_t* outBlocked(pcb_t *p) {
 	semd_t *s = getSemd(p->p_semkey);
 
@@ -103,6 +132,12 @@ pcb_t* outBlocked(pcb_t *p) {
 	return tmp;
 }
 
+/**
+  * @brief returns (without removing) the head of the queue of PCB associated to SEMD.
+  * @param key : pointer to SEMD searched
+  * @return returns NULL if the SEMD isn't in the ASL or the queue of its processes is empty, otherwise the head of the queue.
+ */
+
 pcb_t* headBlocked(int *key) {
 	semd_t *s = getSemd(key);
 
@@ -112,6 +147,13 @@ pcb_t* headBlocked(int *key) {
 
 	return container_of(s->s_procQ.next, pcb_t, p_next);
 }
+
+/**
+  * @brief removes the process p from the queue of the SEMD (semaphores descriptors) where it is blocked. 
+  			Furthermore, removes all processes that have as a forefather p.
+  * @param p : pointer to PCB to remove.
+  * @return void.
+ */
 
 void outChildBlocked(pcb_t *p) {
 	outBlocked(p);
