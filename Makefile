@@ -30,12 +30,12 @@ VPATH = $(UMPS2_DATA_DIR)
 
 .PHONY : all clean
 
-all : kernel.core.umps
+all : tests/p1/kernel.core.umps
 
-kernel.core.umps : kernel
+tests/p1/kernel.core.umps : tests/p1/kernel
 	umps2-elf2umps -k $<
 
-kernel : p1test_rikaya_v0.o pcb.o asl.o crtso.o libumps.o
+tests/p1/kernel : tests/p1/p1test_rikaya_v0.o pcb/pcb.o asl/asl.o crtso.o libumps.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 clean :

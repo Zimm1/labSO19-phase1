@@ -1,5 +1,5 @@
-# labSO 2018-2019 - Phase 1
-RiKaya Operating System level 2 implementation (Queue Level)
+# labSO 2018-2019 - RiKayaOS
+RiKaya Operating System implementation
 
 ## Setup
 * Install uMPS using [umps-apt-installer](https://github.com/Zimm1/umps-apt-installer)
@@ -7,4 +7,4 @@ RiKaya Operating System level 2 implementation (Queue Level)
 	```
     make
     ```
-* The test `p1test_rikaya_v0.c` can be executed in uMPS by loading the virtual machine conifguration `phase1`
+* There will be some tests in `/tests` folder, which can be executed in uMPS by loading the corresponding virtual machine conifguration in each folder

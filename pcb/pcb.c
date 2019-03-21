@@ -1,5 +1,5 @@
 #include "pcb.h"
-#include "const.h"
+#include "utils/const.h"
 
 HIDDEN pcb_t pcbfree_h;
 HIDDEN pcb_t pcbFree_table[MAXPROC];

@@ -1,7 +1,7 @@
 #ifndef PCB_H
 #define PCB_H
 #include <umps/types.h>
-#include <types_rikaya.h>
+#include "utils/types_rikaya.h"
 
 /* PCB handling functions */
 

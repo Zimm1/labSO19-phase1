@@ -32,12 +32,12 @@
  *    
  */
 
-#include "const.h"
-#include "listx.h"
+#include "utils/const.h"
+#include "utils/listx.h"
 #include <umps/libumps.h>
 
-#include "pcb.h"
-#include "asl.h"
+#include "pcb/pcb.h"
+#include "asl/asl.h"
 
 #define	MAXSEM	MAXPROC
 
