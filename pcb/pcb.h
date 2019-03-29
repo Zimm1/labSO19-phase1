@@ -3,6 +3,10 @@
 #include <umps/types.h>
 #include "utils/types_rikaya.h"
 
+typedef struct pcb_t {
+	unsigned int original_priority;
+} pcb_t;
+
 /* PCB handling functions */
 
 /* PCB free list handling functions */

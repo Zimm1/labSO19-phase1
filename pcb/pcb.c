@@ -49,6 +49,7 @@ pcb_t *allocPcb(void) {
 		p->p_s.lo = 0;
 
 		p->priority = 0;
+		p->original_priority = 0;
 	}
 
 	return p;
