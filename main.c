@@ -1,14 +1,9 @@
-#include <libuarm.h>
-#include <uARMconst.h>
-#include <uARMtypes.h>
-#include <arch.h>
-
 #include "tests/p1.5/p1.5test_rikaya_v0.c"
 #include "pcb/pcb.h"
 
-#include "scheduler.h"
-#include "exceptions.h"
-#include "interrupts.h"
+#include "scheduler.c"
+#include "exceptions.c"
+#include "interrupts.c"
 
 
 
@@ -16,14 +11,15 @@ void initArea(memaddr area, memaddr handler){
     state_t *newArea = (state_t*) area;
     /* Memorizza il contenuto attuale del processore in newArea */
     STST(newArea);
-    /* Setta pc alla funzione che gestirà l'eccezione */
-    newArea->pc = handler;
-    /* Setta sp a RAMTOP */
-    newArea->sp = RAM_TOP;
-    /* Setta il registro di Stato per mascherare tutti gli interrupt e si mette in kernel-mode. */
-    newArea->cpsr = STATUS_ALL_INT_DISABLE((newArea->cpsr) | STATUS_SYS_MODE);
-    /* Disabilita la memoria virtuale */
-    newArea->CP15_Control = (newArea->CP15_Control) & ~(ENABLE_VM);
+
+    /* Imposta il PC all'indirizzo del gestore delle eccezioni */
+	  newArea->pc_epc = newArea->reg_t9 = handler;
+
+    /* Imposta il registro sp a RAMTOP */
+	  newArea->reg_sp = RAMTOP;
+
+	  /* Interrupt mascherati, Memoria Virtuale spenta, Kernel Mode attivo */
+	  newArea->status = (newArea->status | STATUS_KUc) & ~STATUS_INT_UNMASKED & ~STATUS_VMp;
 }
 
 
