@@ -49,7 +49,7 @@ int main() {
 	  Process->p_state.status = (Process->p_state.status | STATUS_IEp | STATUS_INT_UNMASKED | STATUS_KUc) & ~STATUS_VMp;
 
 	  /* Il registro SP viene inizializzato a RAMTOP-FRAMESIZE */
-	  init->p_state.reg_sp = (RAMTOP - FRAME_SIZE) * i;
+	  Process->p_state.reg_sp = (RAMTOP - FRAME_SIZE) * i;
 
     /* Assegno la priorità e l'original priority uguale a numero del test */
     Process->original_priority = Process->priority = i;
@@ -65,7 +65,7 @@ int main() {
       break;
 
       case 3:
-        Process->p_state.pc_epc = Process->p_state.reg_t9 = (memaddr) test3;      
+        Process->p_state.pc_epc = Process->p_state.reg_t9 = (memaddr) test3;
       break;
     }
 
