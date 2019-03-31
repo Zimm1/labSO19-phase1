@@ -15,8 +15,8 @@ void initArea(memaddr area, memaddr handler){
     /* Imposta il PC all'indirizzo del gestore delle eccezioni */
 	  newArea->pc_epc = newArea->reg_t9 = handler;
 
-    /* Imposta il registro sp a RAMTOP */
-	  newArea->reg_sp = RAMTOP;
+    /* Imposta il registro sp a RAM_TOP */
+	  newArea->reg_sp = RAM_TOP;
 
 	  /* Interrupt mascherati, Memoria Virtuale spenta, Kernel Mode attivo */
 	  newArea->status = (newArea->status | STATUS_KUc) & ~STATUS_INT_UNMASKED & ~STATUS_VMp;
@@ -45,27 +45,27 @@ int main() {
       PANIC();
     }
 
-    /* Abilita gli interrupt, il Local Timer e la kernel-mode */
-    Process->p_s.cpsr = STATUS_ALL_INT_ENABLE(Process->p_s.cpsr) | STATUS_SYS_MODE;
-    /* Disabilita la memoria virtuale */
-    Process->p_s.CP15_Control = (Process->p_s.CP15_Control) & ~(ENABLE_VM);
-    /* Assegna ad SP il valore (RAMTOP - FRAMESIZE) * la priorità i */
-    Process->p_s.sp = (RAM_TOP - FRAME_SIZE) * i;
+    /* Interrupt attivati e smascherati, Memoria Virtuale spenta, Kernel-Mode attivo */
+	  Process->p_state.status = (Process->p_state.status | STATUS_IEp | STATUS_INT_UNMASKED | STATUS_KUc) & ~STATUS_VMp;
+
+	  /* Il registro SP viene inizializzato a RAMTOP-FRAMESIZE */
+	  init->p_state.reg_sp = (RAMTOP - FRAME_SIZE) * i;
+
     /* Assegno la priorità e l'original priority uguale a numero del test */
     Process->original_priority = Process->priority = i;
 
     /* Assegno i vari test (1, 2, 3) a seconda del valore di i */
     switch (i) {
       case 1:
-        Process->p_s.pc = (memaddr) test1;
+        Process->p_state.pc_epc = Process->p_state.reg_t9 = (memaddr) test1;
       break;
 
       case 2:
-        Process->p_s.pc = (memaddr) test2;
+        Process->p_state.pc_epc = Process->p_state.reg_t9 = (memaddr) test2;
       break;
 
       case 3:
-        Process->p_s.pc = (memaddr) test3;
+        Process->p_state.pc_epc = Process->p_state.reg_t9 = (memaddr) test3;      
       break;
     }
 
