@@ -1,43 +1,39 @@
-#include <libuarm.h>
-#include <uARMconst.h>
-#include <uARMtypes.h>
-#include <arch.h>
+#ifndef SCHEDULER_H
+#define SCHEDULER_H
 
+#include <umps/arch.h>
+
+#include "tests/p1.5/main.c"
+#include "utils/const.h"
 #include "pcb/pcb.h"
-#include "interrupt.h"
-
-
-unsigned int time_slice = 3;
-
-pcb_t *current_process;
 
 void setNextTimer(){
-	setTimer(time_slice);
+	setTIMER(TIME_SLICE);
 }
 
 void aging(){
-	pcb_t *currentP;
-	list_for_each_entry(currentP, ready_queue, p_next) {
-		currentP->priority = currentP->priority + 1;
+	pcb_t *item;
+	list_for_each_entry(item, &readyQueue, p_next) {
+		item->priority++;
 	}
 }
 
 void schedule(){
-
 	setNextTimer();
 
-	if(!emptyProcQ(ready_queue)){
-		current_process = (pcb_t*) removeProcQ(ready_queue);
+	if(!emptyProcQ(&readyQueue)){
+		currentProcess = removeProcQ(&readyQueue);
 
-		current_process->priority = current_process->original_priority;
+		currentProcess->priority = currentProcess->original_priority;
 
 		aging();
 
-		log_process_order(current_process);
+		log_process_order(currentProcess->original_priority);
 
-		LDST(&(current_process->p_s));
+		LDST(&(currentProcess->p_s));
 	} else {
 		WAIT();
 	}
-
 }
+
+#endif

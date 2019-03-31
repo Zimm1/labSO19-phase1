@@ -3,7 +3,7 @@
 #include <umps/libumps.h>
 #include <umps/arch.h>
 
-#include "pcb.h"
+#include "pcb/pcb.h"
 
 #define TRANSMITTED 5
 #define TRANSTATUS 2
