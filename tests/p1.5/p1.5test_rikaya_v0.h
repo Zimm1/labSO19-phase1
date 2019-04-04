@@ -24,7 +24,6 @@
 #define STEPS 6
 #define GANTT_SIZE 20
 
-
 void log_process_order(int process);
 
 void test1();

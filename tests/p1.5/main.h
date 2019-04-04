@@ -3,7 +3,7 @@
 
 #include "pcb/pcb.h"
 
-extern struct list_head readyQueue;
-extern pcb_t *currentProcess;
+struct list_head readyQueue;
+pcb_t *currentProcess;
 
 #endif

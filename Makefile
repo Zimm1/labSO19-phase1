@@ -41,7 +41,7 @@ tests/p1.5/kernel.core.umps : tests/p1.5/kernel
 tests/p1/kernel : tests/p1/p1test_rikaya_v0.o pcb/pcb.o asl/asl.o crtso.o libumps.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
-tests/p1.5/kernel : tests/p1.5/main.o crtso.o libumps.o scheduler.o pcb/pcb.o asl/asl.o interrupts.o scheduler.o syscall.o tests/p1.5/p1.5test_rikaya_v0.o
+tests/p1.5/kernel : tests/p1.5/main.o crtso.o libumps.o pcb/pcb.o interrupt/interrupt.o scheduler/scheduler.o syscall/syscall.o tests/p1.5/p1.5test_rikaya_v0.o utils/utils.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 clean :
