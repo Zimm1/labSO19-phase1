@@ -1,12 +1,18 @@
-#ifndef SYSCALL_H
-#define SYSCALL_H
+#include <umps/arch.h>
+#include <umps/libumps.h>
 
-#include "tests/p1.5/main.c"
+#include "syscall.h"
+#include "tests/p1.5/main.h"
+#include "tests/p1.5/p1.5test_rikaya_v0.h"
 #include "pcb/pcb.h"
 #include "utils/types_rikaya.h"
+#include "utils/const.h"
 
-int getCauseExcCode(int cause) {
-    return (cause & 0x7C) >> 2;
+unsigned int cause = 0;
+unsigned int a0 = 0;
+
+int getCauseExcCode() {
+    return (((state_t*) SYSBP_OLD_AREA)->cause & 0x00003C) >> 2;
 }
 
 void terminateProcess(pcb_t *pcb){
@@ -22,13 +28,15 @@ void terminateProcess(pcb_t *pcb){
         outProcQ(&readyQueue, pcb);
         freePcb(pcb);
     }
+
+    schedule();
 }
 
 void sysBpHandler(){
-    state_t *sysbp_old = &currentProcess->p_s;
+    state_t *sysbp_old = (state_t*) SYSBP_OLD_AREA;
 
-    unsigned int cause = getCauseExcCode(sysbp_old->cause);
-    unsigned int a0 = (*sysbp_old).reg_a0;
+    cause = getCauseExcCode();
+    a0 = (*sysbp_old).reg_a0;
     unsigned int a1 = (*sysbp_old).reg_a1;
     unsigned int a2 = (*sysbp_old).reg_a2;
     unsigned int a3 = (*sysbp_old).reg_a3;
@@ -43,7 +51,7 @@ void sysBpHandler(){
                 PANIC();
                 break;
         }
+    } else {
+        PANIC();
     }
 }
-
-#endif

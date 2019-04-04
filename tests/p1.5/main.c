@@ -1,21 +1,26 @@
-#ifndef MAIN_H
-#define MAIN_H
+#include <umps/arch.h>
+#include <umps/libumps.h>
 
-#include "pcb/pcb.h"
+#include "p1.5test_rikaya_v0.h"
+
+#include "main.h"
+#include "scheduler.h"
+#include "syscall.h"
+#include "interrupts.h"
+#include "utils/const.h"
 
 struct list_head readyQueue;
 pcb_t *currentProcess;
 
-#include <umps/arch.h>
+int diocane = 0;
 
-#include "p1.5test_rikaya_v0.c"
+void initAreaStatus(state_t* state) {
+    state->status = (((0 & ~INT_MASK_ON_OR) & VM_OFF_AND) & KERNEL_ON_AND) | TIMER_ON_OR;
+    diocane = state->status;
+}
 
-#include "scheduler.c"
-#include "syscall.c"
-#include "interrupts.c"
-
-void initStatus(state_t* state) {
-    state->status = (((state->status | INT_MASK_ON_OR) & VM_OFF_AND) & KERNEL_ON_AND) | TIMER_ON_OR;
+void initProcessStatus(state_t* state) {
+    state->status = (((0 | INT_MASK_ON_OR_TERM) & VM_OFF_AND) & KERNEL_ON_AND) | TIMER_ON_OR;
 }
 
 void initArea(memaddr area, memaddr handler){
@@ -24,9 +29,9 @@ void initArea(memaddr area, memaddr handler){
     newArea->pc_epc = handler;
     /* Setta sp a RAMTOP */
     newArea->reg_sp = RAMTOP;
-    newArea->reg_t9 = RAMTOP;
     /* Setta il registro di Stato per mascherare tutti gli interrupt e si mette in kernel-mode. */
-    initStatus(newArea);
+    initAreaStatus(newArea);
+    newArea->status = 0;
 }
 
 void initProccesses() {
@@ -37,7 +42,7 @@ void initProccesses() {
     }
 
     /* Abilita gli interrupt, il Local Timer e la kernel-mode */
-    initStatus(&(process->p_s));
+    initProcessStatus(&(process->p_s));
     /* Assegna ad SP il valore RAMTOP - FRAMESIZE * la priorità i */
     process->p_s.reg_sp = RAMTOP - FRAMESIZE * i;
     /* Assegno la priorità e l'original priority uguale a numero del test */
@@ -77,10 +82,8 @@ int main() {
 
   /* Alloco i 3 processi e li aggiungo alla readyQueue */
   initProccesses();
-
+  
   schedule();
 
   return -1;
 }
-
-#endif

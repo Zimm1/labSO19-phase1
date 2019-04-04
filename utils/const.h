@@ -21,6 +21,7 @@
 
 /* CP0 status register */
 #define INT_MASK_ON_OR	0x0000FF15
+#define INT_MASK_ON_OR_TERM	0x00007F15
 #define VM_OFF_AND		0xF8FFFFFF
 #define KERNEL_ON_AND	0xFFFFFFD5
 #define TIMER_ON_OR		0x08000000

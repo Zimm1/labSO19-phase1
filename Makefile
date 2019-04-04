@@ -18,8 +18,8 @@ UMPS2_DATA_DIR = $(UMPS2_DIR_PREFIX)/share/umps2
 UMPS2_INCLUDE_DIR = $(UMPS2_DIR_PREFIX)/include/umps2
 
 # Compiler options
-CFLAGS_LANG = -ansi
-CFLAGS_MIPS = -mips1 -mfp32 -std=gnu11
+CFLAGS_LANG = -ansi -std=gnu11
+CFLAGS_MIPS = -mips1 -mfp32
 CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS2_INCLUDE_DIR) -I. -Wall
 
 # Linker options
@@ -41,7 +41,7 @@ tests/p1.5/kernel.core.umps : tests/p1.5/kernel
 tests/p1/kernel : tests/p1/p1test_rikaya_v0.o pcb/pcb.o asl/asl.o crtso.o libumps.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
-tests/p1.5/kernel : tests/p1.5/main.o pcb/pcb.o asl/asl.o crtso.o libumps.o
+tests/p1.5/kernel : tests/p1.5/main.o crtso.o libumps.o scheduler.o pcb/pcb.o asl/asl.o interrupts.o scheduler.o syscall.o tests/p1.5/p1.5test_rikaya_v0.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 clean :

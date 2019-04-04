@@ -2,8 +2,11 @@
 #define SCHEDULER_H
 
 #include <umps/arch.h>
+#include <umps/libumps.h>
 
-#include "tests/p1.5/main.c"
+#include "scheduler.h"
+#include "tests/p1.5/p1.5test_rikaya_v0.h"
+#include "tests/p1.5/main.h"
 #include "utils/const.h"
 #include "pcb/pcb.h"
 
@@ -19,9 +22,9 @@ void aging(){
 }
 
 void schedule(){
-	setNextTimer();
-
 	if(!emptyProcQ(&readyQueue)){
+		setNextTimer();
+
 		currentProcess = removeProcQ(&readyQueue);
 
 		currentProcess->priority = currentProcess->original_priority;
