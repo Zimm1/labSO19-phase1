@@ -22,8 +22,9 @@ void aging(){
 }
 
 void schedule(){
+	setNextTimer();
+	
 	if(!emptyProcQ(&readyQueue)){
-		setNextTimer();
 
 		currentProcess = removeProcQ(&readyQueue);
 
@@ -35,7 +36,7 @@ void schedule(){
 
 		LDST(&(currentProcess->p_s));
 	} else {
-		WAIT();
+		HALT();
 	}
 }
 

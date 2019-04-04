@@ -12,11 +12,8 @@
 struct list_head readyQueue;
 pcb_t *currentProcess;
 
-int diocane = 0;
-
 void initAreaStatus(state_t* state) {
     state->status = (((0 & ~INT_MASK_ON_OR) & VM_OFF_AND) & KERNEL_ON_AND) | TIMER_ON_OR;
-    diocane = state->status;
 }
 
 void initProcessStatus(state_t* state) {
