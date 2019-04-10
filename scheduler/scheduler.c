@@ -11,6 +11,10 @@ void setNextTimer() {
 	setTIMER(TIME_SLICE);
 }
 
+/**
+  * @brief increments the priority of all processes in the ready queue in order to avoid starvation.
+  * @return void.
+ */
 void aging() {
 	pcb_t* item;
 	list_for_each_entry(item, &readyQueue, p_next) {
@@ -18,16 +22,16 @@ void aging() {
 	}
 }
 
+/**
+  * @brief removes from the queue of ready processes the PCB with highest priority and load his state in the CPU.
+  * @return void.
+ */
 void schedule() {
-	if (currentProcess != NULL) {
-		copyState((state_t*) INT_OLD_AREA, &(currentProcess->p_s));
-		insertProcQ(&readyQueue, currentProcess);
-	}
-
 	setNextTimer();
 	
 	if (!emptyProcQ(&readyQueue)) {
 		currentProcess = removeProcQ(&readyQueue);
+		/*reset the priority of removed process to its original priority.*/
 		currentProcess->priority = currentProcess->original_priority;
 		log_process_order(currentProcess->original_priority);
 
