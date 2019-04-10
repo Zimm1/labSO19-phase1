@@ -1,10 +1,11 @@
 #include <umps/libumps.h>
 
 #include "scheduler.h"
+#include "pcb/pcb.h"
 #include "tests/p1.5/main.h"
 #include "tests/p1.5/p1.5test_rikaya_v0.h"
 #include "utils/const.h"
-#include "pcb/pcb.h"
+#include "utils/utils.h"
 
 void setNextTimer() {
 	setTIMER(TIME_SLICE);
@@ -18,6 +19,11 @@ void aging() {
 }
 
 void schedule() {
+	if (currentProcess != NULL) {
+		copyState((state_t*) INT_OLD_AREA, &(currentProcess->p_s));
+		insertProcQ(&readyQueue, currentProcess);
+	}
+
 	setNextTimer();
 	
 	if (!emptyProcQ(&readyQueue)) {

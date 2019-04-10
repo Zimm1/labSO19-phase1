@@ -27,7 +27,7 @@ void freePcb(pcb_t *p) {
 
 /**
   * @brief Allocates a pcb and removes it from the free pcb list.
-  * @return Pointer to allocated pcb, NULL if the free pcb list is empty
+  * @return Pointer to allocated pcb, NULL if the free pcb list is empty.
  */
 pcb_t *allocPcb(void) {
 	pcb_t *p = removeProcQ(&pcbfree_h.p_next);
@@ -157,7 +157,7 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
 }
 
 /**
-  * @brief Removes the first child of a pcb
+  * @brief Removes the first child of a pcb.
   * @param parent : Parent pcb pointer.
   * @return Removed child pcb pointer, NULL if the parent pcb hasn't any children.
  */
