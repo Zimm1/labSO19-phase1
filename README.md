@@ -7,4 +7,4 @@ RiKaya Operating System implementation
 	```
     make
     ```
-* There will be some tests in `/tests` folder, which can be executed in uMPS by loading the corresponding virtual machine conifguration in each folder
+* There will be some tests in `/tests` folder, which can be executed in uMPS by loading the corresponding virtual machine conifguration in each folder (ex. p1, p1.5)

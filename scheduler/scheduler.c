@@ -7,7 +7,7 @@
 #include "utils/const.h"
 #include "utils/utils.h"
 
-void setNextTimer() {
+HIDDEN void setNextTimer() {
 	setTIMER(TIME_SLICE);
 }
 
@@ -15,7 +15,7 @@ void setNextTimer() {
   * @brief increments the priority of all processes in the ready queue in order to avoid starvation.
   * @return void.
  */
-void aging() {
+HIDDEN void aging() {
 	pcb_t* item;
 	list_for_each_entry(item, &readyQueue, p_next) {
 		item->priority++;
@@ -23,7 +23,7 @@ void aging() {
 }
 
 /**
-  * @brief removes from the queue of ready processes the PCB with highest priority and load his state in the CPU.
+  * @brief Removes from the queue of ready processes the PCB with highest priority and load his state in the CPU.
   * @return void.
  */
 void schedule() {
@@ -31,7 +31,7 @@ void schedule() {
 	
 	if (!emptyProcQ(&readyQueue)) {
 		currentProcess = removeProcQ(&readyQueue);
-		/*reset the priority of removed process to its original priority.*/
+		/* Reset the priority of removed process to its original priority. */
 		currentProcess->priority = currentProcess->original_priority;
 		log_process_order(currentProcess->original_priority);
 

@@ -7,11 +7,21 @@
 #include "utils/types_rikaya.h"
 #include "utils/const.h"
 
-int getCauseExcCode(int cause) {
+/**
+  * @brief Extracts the cause from the cause register
+  * @param pcb : Cause register.
+  * @return Extracted cause.
+ */
+HIDDEN int getCauseExcCode(int cause) {
     return (cause & EXC_CODE_MASK) >> EXC_CODE_SHIFT;
 }
 
-void terminateProcess(pcb_t* pcb) {
+/**
+  * @brief (SYS3) Terminates a process and all of its children.
+  * @param pcb : Process to terminate.
+  * @return void.
+ */
+HIDDEN void terminateProcess(pcb_t* pcb) {
     if (pcb != NULL) {
         while(!emptyChild(pcb)) {
             terminateProcess(removeChild(pcb));
@@ -28,6 +38,10 @@ void terminateProcess(pcb_t* pcb) {
     schedule();
 }
 
+/**
+  * @brief System calls and breakpoints handler, checks the cause and calls the right sub-handler
+  * @return void.
+ */
 void sysBpHandler() {
     state_t* sysbp_old = (state_t*) SYSBP_OLD_AREA;
 

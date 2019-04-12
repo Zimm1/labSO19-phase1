@@ -6,6 +6,10 @@
 #include "utils/utils.h"
 
 
+/**
+  * @brief Hanldes all interrupts, restores current process state and calls scheduler.
+  * @return void.
+ */
 void intHandler() {
 	if (currentProcess != NULL) {
 		copyState((state_t*) INT_OLD_AREA, &(currentProcess->p_s));
