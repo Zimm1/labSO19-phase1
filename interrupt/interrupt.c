@@ -1,8 +1,8 @@
 #include "interrupt.h"
 #include "pcb/pcb.h"
-#include "tests/p1.5/main.h"
+#include "tests/p2/main.h"
 #include "scheduler/scheduler.h"
-#include "utils/const.h"
+#include "utils/const_rikaya.h"
 #include "utils/utils.h"
 
 
@@ -12,7 +12,7 @@
  */
 void intHandler() {
 	if (currentProcess != NULL) {
-		copyState((state_t*) INT_OLD_AREA, &(currentProcess->p_s));
+		copyState((state_t*) INT_OLDAREA, &(currentProcess->p_s));
 		insertProcQ(&readyQueue, currentProcess);
 	}
 

@@ -1,6 +1,6 @@
 #include "asl.h"
 #include "pcb/pcb.h"
-#include "utils/const.h"
+#include "utils/const_rikaya.h"
 
 HIDDEN struct list_head semdfree_h;
 HIDDEN struct list_head semd_h;

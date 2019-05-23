@@ -1,5 +1,5 @@
 #include "pcb.h"
-#include "utils/const.h"
+#include "utils/const_rikaya.h"
 
 HIDDEN pcb_t pcbfree_h;
 HIDDEN pcb_t pcbFree_table[MAXPROC];

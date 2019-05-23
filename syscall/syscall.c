@@ -2,10 +2,10 @@
 
 #include "syscall.h"
 #include "scheduler/scheduler.h"
-#include "tests/p1.5/main.h"
+#include "tests/p2/main.h"
 #include "pcb/pcb.h"
 #include "utils/types_rikaya.h"
-#include "utils/const.h"
+#include "utils/const_rikaya.h"
 
 /**
   * @brief Extracts the cause from the cause register
@@ -43,14 +43,14 @@ HIDDEN void terminateProcess(pcb_t* pcb) {
   * @return void.
  */
 void sysBpHandler() {
-    state_t* sysbp_old = (state_t*) SYSBP_OLD_AREA;
+    state_t* sysbp_old = (state_t*) SYSBK_OLDAREA;
 
     unsigned int cause = getCauseExcCode(sysbp_old->cause);
     unsigned int a0 = sysbp_old->reg_a0;
 
     if (cause == EXC_SYS) {
         switch(a0) {
-            case SYS_TERMINATE_PROCESS:
+            case TERMINATEPROCESS:
                 terminateProcess(currentProcess);
                 break;     
 

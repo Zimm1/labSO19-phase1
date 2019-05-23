@@ -2,13 +2,13 @@
 
 #include "scheduler.h"
 #include "pcb/pcb.h"
-#include "tests/p1.5/main.h"
-#include "tests/p1.5/p1.5test_rikaya_v0.h"
-#include "utils/const.h"
+#include "tests/p2/main.h"
+#include "tests/p2/p2test_rikaya_v0.1.c"
+#include "utils/const_rikaya.h"
 #include "utils/utils.h"
 
 HIDDEN void setNextTimer() {
-	setTIMER(TIME_SLICE);
+	setTIMER(SCHED_TIME_SLICE);
 }
 
 /**
@@ -33,7 +33,7 @@ void schedule() {
 		currentProcess = removeProcQ(&readyQueue);
 		/* Reset the priority of removed process to its original priority. */
 		currentProcess->priority = currentProcess->original_priority;
-		log_process_order(currentProcess->original_priority);
+		//log_process_order(currentProcess->original_priority);
 
 		aging();
 

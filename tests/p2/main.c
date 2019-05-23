@@ -2,13 +2,13 @@
 #include <umps/libumps.h>
 
 #include "main.h"
-#include "p1.5test_rikaya_v0.h"
+#include "p2test_rikaya_v0.1.c"
 #include "pcb/pcb.h"
 #include "asl/asl.h"
 #include "scheduler/scheduler.h"
 #include "syscall/syscall.h"
 #include "interrupt/interrupt.h"
-#include "utils/const.h"
+#include "utils/const_rikaya.h"
 
 struct list_head readyQueue; /* Ready process list */
 pcb_t *currentProcess; /* Currently running process */
@@ -76,9 +76,7 @@ HIDDEN void initProccesses() {
   initPcbs();
   mkEmptyProcQ(&readyQueue);
 
-  initProcess(1, (memaddr) test1);
-  initProcess(2, (memaddr) test2);
-  initProcess(3, (memaddr) test3);
+  initProcess(1, (memaddr) test);
 }
 
 /**

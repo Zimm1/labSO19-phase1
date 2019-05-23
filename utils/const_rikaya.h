@@ -25,6 +25,20 @@ typedef int S32;
 #define NULL ((void *) 0)
 #endif
 
+/* CP0 status register */
+#define INT_MASK_ON_OR				0x0000FF15
+#define INT_TIMER_MASK_ON_OR	0x00000215
+#define VM_OFF_AND						0xF8FFFFFF
+#define KERNEL_ON_AND					0xFFFFFFD5
+#define TIMER_ON_OR						0x08000000
+
+/* Exc Cause */
+#define EXC_CODE_MASK		0x00003C
+#define EXC_CODE_SHIFT	        2
+#define EXC_SYS					8
+#define EXC_BP					9
+
+
 #define DELAY_DAEMON_ASID UPROCMAX   /* to avoid overlapping ASIDs */
 /* #define ANOTHER_DAEMON_ASID UPROCMAX + 1
    #define YET_ANOTHER_DAEMON_ASID UPROCMAX + 2

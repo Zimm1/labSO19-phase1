@@ -20,8 +20,8 @@
  *      Modified by Mattia Maldini, Renzo Davoli 2019
  */
 
-#include "const_rikaya.h"
-#include "types_rikaya.h"
+#include "utils/const_rikaya.h"
+#include "utils/types_rikaya.h"
 //#include <types.h>
 #include <umps/libumps.h>
 #include <umps/arch.h>

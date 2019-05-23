@@ -32,7 +32,6 @@
  *    
  */
 
-#include "utils/const.h"
 #include "utils/listx.h"
 #include <umps/libumps.h>
 

@@ -3,7 +3,7 @@
 
 #include <umps/types.h>
 #include "listx.h"
-#include "const.h"
+#include "const_rikaya.h"
 
 typedef unsigned int memaddr;
 
