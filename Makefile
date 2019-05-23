@@ -30,18 +30,24 @@ VPATH = $(UMPS2_DATA_DIR)
 
 .PHONY : all clean
 
-all : tests/p1/kernel.core.umps tests/p1.5/kernel.core.umps
+all : tests/p1/kernel.core.umps tests/p1.5/kernel.core.umps tests/p2/kernel.core.umps
 
 tests/p1/kernel.core.umps : tests/p1/kernel
-	umps2-elf2umps -k $<
-
-tests/p1.5/kernel.core.umps : tests/p1.5/kernel
 	umps2-elf2umps -k $<
 
 tests/p1/kernel : tests/p1/p1test_rikaya_v0.o pcb/pcb.o asl/asl.o crtso.o libumps.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
+tests/p1.5/kernel.core.umps : tests/p1.5/kernel
+	umps2-elf2umps -k $<
+
 tests/p1.5/kernel : tests/p1.5/main.o crtso.o libumps.o pcb/pcb.o interrupt/interrupt.o scheduler/scheduler.o syscall/syscall.o tests/p1.5/p1.5test_rikaya_v0.o utils/utils.o
+	$(LD) -o $@ $^ $(LDFLAGS)
+
+tests/p2/kernel.core.umps : tests/p2/kernel
+	umps2-elf2umps -k $<
+
+tests/p2/kernel : tests/p2/main.o crtso.o libumps.o pcb/pcb.o asl/asl.o interrupt/interrupt.o scheduler/scheduler.o syscall/syscall.o tests/p2/p1.5test_rikaya_v0.o utils/utils.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 clean :
