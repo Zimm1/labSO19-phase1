@@ -2,7 +2,7 @@
 #include <umps/arch.h>
 
 #include "p1.5test_rikaya_v0.h"
-#include "utils/const.h"
+#include "utils/const_rikaya.h"
 #include "utils/listx.h"
 #include "pcb/pcb.h"
 

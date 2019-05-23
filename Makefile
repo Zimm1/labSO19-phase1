@@ -20,7 +20,7 @@ UMPS2_INCLUDE_DIR = $(UMPS2_DIR_PREFIX)/include/umps2
 # Compiler options
 CFLAGS_LANG = -ansi -std=gnu11
 CFLAGS_MIPS = -mips1 -mfp32
-CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS2_INCLUDE_DIR) -I. -Wall
+CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS2_INCLUDE_DIR) -I. -Wall -fstack-protector
 
 # Linker options
 LDFLAGS = -nostdlib -T $(UMPS2_DATA_DIR)/umpscore.ldscript
@@ -47,7 +47,7 @@ tests/p1.5/kernel : tests/p1.5/main.o crtso.o libumps.o pcb/pcb.o interrupt/inte
 tests/p2/kernel.core.umps : tests/p2/kernel
 	umps2-elf2umps -k $<
 
-tests/p2/kernel : tests/p2/main.o crtso.o libumps.o pcb/pcb.o asl/asl.o interrupt/interrupt.o scheduler/scheduler.o syscall/syscall.o tests/p2/p1.5test_rikaya_v0.o utils/utils.o
+tests/p2/kernel : tests/p2/main.o crtso.o libumps.o pcb/pcb.o asl/asl.o interrupt/interrupt.o scheduler/scheduler.o syscall/syscall.o tests/p2/p2test_rikaya_v0.1.o utils/utils.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 clean :

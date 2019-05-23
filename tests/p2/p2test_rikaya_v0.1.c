@@ -20,6 +20,7 @@
  *      Modified by Mattia Maldini, Renzo Davoli 2019
  */
 
+#include "p2test_rikaya_v0.1.h"
 #include "utils/const_rikaya.h"
 #include "utils/types_rikaya.h"
 //#include <types.h>

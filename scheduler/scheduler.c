@@ -3,7 +3,6 @@
 #include "scheduler.h"
 #include "pcb/pcb.h"
 #include "tests/p2/main.h"
-#include "tests/p2/p2test_rikaya_v0.1.c"
 #include "utils/const_rikaya.h"
 #include "utils/utils.h"
 

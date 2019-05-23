@@ -2,7 +2,7 @@
 #include <umps/libumps.h>
 
 #include "main.h"
-#include "p2test_rikaya_v0.1.c"
+#include "p2test_rikaya_v0.1.h"
 #include "pcb/pcb.h"
 #include "asl/asl.h"
 #include "scheduler/scheduler.h"
@@ -53,7 +53,7 @@ HIDDEN void initProcess(int index, memaddr address) {
 
   process->p_s.pc_epc = address;
   process->original_priority = process->priority = index;
-  process->p_s.reg_sp = RAMTOP - FRAMESIZE * index;
+  process->p_s.reg_sp = RAMTOP - FRAME_SIZE * index;
   initProcessStatus(&(process->p_s));
 
   insertProcQ(&readyQueue, process);
@@ -64,8 +64,8 @@ HIDDEN void initProcess(int index, memaddr address) {
   * @return void.
  */
 HIDDEN void initAreas() {
-  initArea(SYSBP_NEW_AREA,  (memaddr) sysBpHandler);
-  initArea(INT_NEW_AREA,    (memaddr) intHandler);
+  initArea(SYSBK_NEWAREA,  (memaddr) sysBpHandler);
+  initArea(INT_NEWAREA,    (memaddr) intHandler);
 }
 
 /**
