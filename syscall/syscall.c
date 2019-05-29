@@ -4,17 +4,12 @@
 #include "scheduler/scheduler.h"
 #include "tests/p2/main.h"
 #include "pcb/pcb.h"
+#include "asl/asl.h"
 #include "utils/types_rikaya.h"
 #include "utils/const_rikaya.h"
+#include "utils/utils.h"
 
-/**
-  * @brief Extracts the cause from the cause register
-  * @param pcb : Cause register.
-  * @return Extracted cause.
- */
-HIDDEN int getCauseExcCode(int cause) {
-    return (cause & EXC_CODE_MASK) >> EXC_CODE_SHIFT;
-}
+state_t* sysbp_old = (state_t*) SYSBK_OLDAREA;
 
 /**
   * @brief (SYS3) Terminates a process and all of its children.
@@ -38,25 +33,87 @@ HIDDEN void terminateProcess(pcb_t* pcb) {
     schedule();
 }
 
+// SYS4
+void verhogen(int *sem) {
+    (*sem)++;
+    pcb_t* first = removeBlocked(sem);
+
+    if (first != NULL) {
+        first->p_semkey = NULL;
+        insertProcQ(&readyQueue, first);
+    }
+}
+
+// SYS4
+void passeren(int *sem) {
+    (*sem)--;
+
+    if ((*sem)<0) {
+        currentProcess->p_semkey = sem;
+        currentProcess->cpu_time += getTODLO() - process_TOD;
+
+        insertBlocked(sem, currentProcess);
+        currentProcess = NULL;
+    }
+}
+
+// SYS7
+void doIO(unsigned int command, int* reg) {
+    *(reg + 3) = command;
+
+    // TODO CHANGE
+    int line = 8;
+    int dev = 0;
+
+    memaddr *semaphoreDevice = getSemDev(line, dev);
+    memaddr *statusReg = getKernelStatusDev(line, dev);
+
+    if((*statusReg) != 0){
+        currentProcess->p_s.reg_a1 = (*statusReg);
+        (*statusReg) = 0;
+    } else {
+        passeren((int *) semaphoreDevice);
+    }
+}
+
 /**
   * @brief System calls and breakpoints handler, checks the cause and calls the right sub-handler
   * @return void.
  */
 void sysBpHandler() {
-    state_t* sysbp_old = (state_t*) SYSBK_OLDAREA;
+    copyState(sysbp_old, &currentProcess->p_s);
+    currentProcess->p_s.pc_epc += WORD_SIZE;
 
-    unsigned int cause = getCauseExcCode(sysbp_old->cause);
+    unsigned int cause = CAUSE_EXCCODE_GET(sysbp_old->cause);
     unsigned int a0 = sysbp_old->reg_a0;
+    unsigned int a1 = sysbp_old->reg_a1;
+    unsigned int a2 = sysbp_old->reg_a2;
 
     if (cause == EXC_SYS) {
         switch(a0) {
             case TERMINATEPROCESS:
                 terminateProcess(currentProcess);
-                break;     
+                break;
+
+            case VERHOGEN:
+                verhogen((int *) a1);
+                break;
+
+            case PASSEREN:
+                passeren((int *) a1);
+                break;
+
+            case WAITIO:
+                doIO(a1, (int *) a2);
+                break;
 
             default:
                 PANIC();
                 break;
         }
+
+        schedule();
+    } else {
+        PANIC();
     }
 }

@@ -13,20 +13,41 @@
 struct list_head readyQueue; /* Ready process list */
 pcb_t *currentProcess; /* Currently running process */
 
+int semCpuTimer;
+int semDev[N_EXT_IL + 1][N_DEV_PER_IL];
+int statusDev[N_EXT_IL + 1][N_DEV_PER_IL];
+int semPseudoClock;
+
+memaddr* getSemDev(int line, int dev) {
+    if (3 <= line && line <= 8 && 0 <= dev && dev <= 7) {
+        return (memaddr *) &semDev[line - DEV_IL_START][(N_DEV_PER_IL-1) -dev];
+    }
+
+    return NULL;
+}
+
+memaddr* getKernelStatusDev(int line, int dev) {
+    if(3 <= line  && line <= 8 && 0 <= dev && dev <= 7) {
+        return (memaddr *) &statusDev[line - DEV_IL_START][(N_DEV_PER_IL-1) -dev];
+    }
+    
+    return NULL;
+}
+
 /**
   * @brief Disables interrupts and vm, enables kernel mode and local timer
   * @return void.
  */
 HIDDEN void initAreaStatus(state_t* state) {
-  state->status = TIMER_ON_OR;
+    state->status = TIMER_ON_OR;
 }
 
 /**
-  * @brief Disables all interrupts (except local timer) and vm, enables kernel mode and local timer
+  * @brief Disables vm, enables all interrupts, kernel mode and local timer
   * @return void.
  */
 HIDDEN void initProcessStatus(state_t* state) {
-  state->status = INT_MASK_ON_OR | TIMER_ON_OR;
+    state->status = INT_MASK_ON_OR | TIMER_ON_OR;
 }
 
 /**
@@ -34,11 +55,11 @@ HIDDEN void initProcessStatus(state_t* state) {
   * @return void.
  */
 HIDDEN void initArea(memaddr area, memaddr handler) {
-  state_t *newArea = (state_t*) area;
+    state_t *newArea = (state_t*) area;
 
-  newArea->pc_epc = handler;
-  newArea->reg_sp = RAMTOP;
-  initAreaStatus(newArea);
+    newArea->pc_epc = handler;
+    newArea->reg_sp = RAMTOP;
+    initAreaStatus(newArea);
 }
 
 /**
@@ -46,17 +67,25 @@ HIDDEN void initArea(memaddr area, memaddr handler) {
   * @return void.
  */
 HIDDEN void initProcess(int index, memaddr address) {
-  pcb_t *process = allocPcb();
-  if (process == NULL) {
+    pcb_t *process = allocPcb();
+    if (process == NULL) {
+        PANIC();
+    }
+
+    process->p_s.pc_epc = address;
+    process->original_priority = process->priority = index;
+    process->p_s.reg_sp = RAMTOP - FRAME_SIZE * index;
+    initProcessStatus(&(process->p_s));
+
+    insertProcQ(&readyQueue, process);
+}
+
+void trapHandler() {
     PANIC();
-  }
+}
 
-  process->p_s.pc_epc = address;
-  process->original_priority = process->priority = index;
-  process->p_s.reg_sp = RAMTOP - FRAME_SIZE * index;
-  initProcessStatus(&(process->p_s));
-
-  insertProcQ(&readyQueue, process);
+void tlbHandler() {
+    PANIC();
 }
 
 /**
@@ -64,8 +93,10 @@ HIDDEN void initProcess(int index, memaddr address) {
   * @return void.
  */
 HIDDEN void initAreas() {
-  initArea(SYSBK_NEWAREA,  (memaddr) sysBpHandler);
-  initArea(INT_NEWAREA,    (memaddr) intHandler);
+    initArea(SYSBK_NEWAREA,  (memaddr) sysBpHandler);
+    initArea(INT_NEWAREA,    (memaddr) intHandler);
+    initArea(PGMTRAP_NEWAREA, (memaddr) trapHandler);
+    initArea(TLB_NEWAREA, (memaddr) tlbHandler);
 }
 
 /**
@@ -73,10 +104,10 @@ HIDDEN void initAreas() {
   * @return void.
  */
 HIDDEN void initProccesses() {
-  initPcbs();
-  mkEmptyProcQ(&readyQueue);
+    initPcbs();
+    mkEmptyProcQ(&readyQueue);
 
-  initProcess(1, (memaddr) test);
+    initProcess(1, (memaddr) test);
 }
 
 /**
@@ -84,15 +115,21 @@ HIDDEN void initProccesses() {
   * @return void.
  */
 HIDDEN void initAsl() {
-  initASL();
+    initASL();
+
+    for (int i = 0; i < N_EXT_IL + 1; ++i) {
+        for (int j = 0; j < N_DEV_PER_IL; ++j) {
+            semDev[i][j] = 0;
+        }
+    }
 }
 
 int main() {
-  initAreas();
-  initProccesses();
-  initAsl();
-  
-  schedule();
+    initAreas();
+    initProccesses();
+    initAsl();
+    
+    schedule();
 
-  return -1;
+    return -1;
 }

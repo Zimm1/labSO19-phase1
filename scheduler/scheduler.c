@@ -2,9 +2,31 @@
 
 #include "scheduler.h"
 #include "pcb/pcb.h"
+#include "asl/asl.h"
 #include "tests/p2/main.h"
 #include "utils/const_rikaya.h"
 #include "utils/utils.h"
+#include "tests/p2/p2test_rikaya_v0.1.h"
+
+unsigned int slice_TOD = 0;
+unsigned int clock_TOD = 0;
+unsigned int process_TOD = 0;
+
+int isTimer(unsigned int TIMER_TYPE) {
+    int time_until_timer;
+
+    if(TIMER_TYPE == SCHED_TIME_SLICE){
+        time_until_timer= TIMER_TYPE - (getTODLO() - slice_TOD);
+    } else if(TIMER_TYPE == SCHED_PSEUDO_CLOCK){
+        time_until_timer= TIMER_TYPE - (getTODLO() - clock_TOD);
+    }
+
+    if(time_until_timer <= 0){
+        return TRUE;
+    } else { 
+        return FALSE;
+    }
+}
 
 HIDDEN void setNextTimer() {
 	setTIMER(SCHED_TIME_SLICE);
@@ -28,16 +50,19 @@ HIDDEN void aging() {
 void schedule() {
 	setNextTimer();
 	
-	if (!emptyProcQ(&readyQueue)) {
-		currentProcess = removeProcQ(&readyQueue);
-		/* Reset the priority of removed process to its original priority. */
-		currentProcess->priority = currentProcess->original_priority;
-		//log_process_order(currentProcess->original_priority);
+    if (currentProcess == NULL) {
+        if (!emptyProcQ(&readyQueue)) {
+            currentProcess = removeProcQ(&readyQueue);
+            /* Reset the priority of removed process to its original priority. */
+            currentProcess->priority = currentProcess->original_priority;
 
-		aging();
+            aging();
+        } else {
+            WAIT();
+            return;
+        }
+    }
 
-		LDST(&(currentProcess->p_s));
-	} else {
-		HALT();
-	}
+    process_TOD = getTODLO();
+    LDST(&(currentProcess->p_s));
 }

@@ -30,7 +30,7 @@ VPATH = $(UMPS2_DATA_DIR)
 
 .PHONY : all clean
 
-all : tests/p1/kernel.core.umps tests/p1.5/kernel.core.umps tests/p2/kernel.core.umps
+all : tests/p2/kernel.core.umps
 
 tests/p1/kernel.core.umps : tests/p1/kernel
 	umps2-elf2umps -k $<

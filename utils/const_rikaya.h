@@ -320,7 +320,7 @@ typedef int S32;
 /* nostre costanti */
 
 /* prese da phase 1 */
-#define RECSTATUS	0
+#define RECSTATUS	    0
 #define RECCOMMAND   	1
 #define TRANSTATUS    	2
 #define TRANCOMMAND   	3
