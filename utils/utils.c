@@ -17,16 +17,19 @@ void copyState(state_t* src, state_t* dest) {
 }
 
 pcb_t* getTUTOR(pcb_t* forefather){
-	if(forefather->p_parent == NULL){
+	if(forefather->p_parent == NULL || forefather->tutor){
 		return forefather;  
 	}
-	pcb_t* itr;
+
+	return getTUTOR(forefather->p_parent);
+
+	/*pcb_t* itr;
 	list_for_each_entry(itr, &forefather->p_child, p_sib) {
 		if(itr->tutor){
 			return itr;
 		}
 	}
-	return getTUTOR(forefather->p_parent);
+	return getTUTOR(forefather->p_parent);*/
 }
 
 int isParent(pcb_t* terminateProcess, pcb_t* currProcess){

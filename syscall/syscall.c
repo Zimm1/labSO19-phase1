@@ -20,6 +20,7 @@ HIDDEN int createProcess(state_t* statep, int priority, pcb_t* cpid){
     }
 
     cpid->tutor = FALSE;
+    cpid->cpu_time = 0;
     cpid->original_priority = cpid->priority = priority;
     copyState(statep, &cpid->p_s);
 
@@ -35,15 +36,14 @@ HIDDEN int createProcess(state_t* statep, int priority, pcb_t* cpid){
   * @return void.
  */
 HIDDEN int terminateProcess(pcb_t* pcb) {
-    pcb_t* tutor = getTUTOR(pcb);
-
     if(pcb == NULL || pcb == 0){
         pcb = currentProcess;
-    } else if (isParent(pcb, currentProcess)){
+    } else if (!isParent(pcb, currentProcess)){
         return -1;
     }
     
     if(pcb != NULL){
+        pcb_t* tutor = getTUTOR(pcb->p_parent);
         while(!emptyChild(pcb)){
             pcb_t* child = removeChild(pcb);
             insertChild(tutor, child);
@@ -54,8 +54,6 @@ HIDDEN int terminateProcess(pcb_t* pcb) {
     }
 
     return 0;
-
-    //schedule();
 }
 
 // SYS4
@@ -114,6 +112,16 @@ void setTutor(){
     }
 }
 
+//SYS10
+void getPid(pcb_t* pid, pcb_t* ppid){
+    if(pid != NULL){
+        pid = currentProcess;
+    }
+    if(ppid != NULL){
+        ppid = pid->p_parent;
+    }
+}
+
 /**
   * @brief System calls and breakpoints handler, checks the cause and calls the right sub-handler
   * @return void.
@@ -153,6 +161,8 @@ void sysBpHandler() {
             case WAITIO:
                 doIO(a1, (int *) a2);
                 break;
+            case GETPID:
+                getPid((pcb_t*) a1, (pcb_t*) a2);
 
             default:
                 PANIC();
