@@ -11,26 +11,51 @@
 
 state_t* sysbp_old = (state_t*) SYSBK_OLDAREA;
 
+//SYS2
+HIDDEN int createProcess(state_t* statep, int priority, pcb_t* cpid){
+    cpid = allocPcb();
+
+    if(cpid == NULL){
+        return FALSE;
+    }
+
+    cpid->tutor = FALSE;
+    cpid->original_priority = cpid->priority = priority;
+    copyState(statep, &cpid->p_s);
+
+    insertChild(currentProcess, cpid);
+    insertProcQ(&readyQueue, cpid);
+
+    return TRUE;
+}
+
 /**
   * @brief (SYS3) Terminates a process and all of its children.
   * @param pcb : Process to terminate.
   * @return void.
  */
-HIDDEN void terminateProcess(pcb_t* pcb) {
-    if (pcb != NULL) {
-        while(!emptyChild(pcb)) {
-            terminateProcess(removeChild(pcb));
-        }
-        outChild(pcb);
-        if (currentProcess == pcb) {
-            currentProcess = NULL;
+HIDDEN int terminateProcess(pcb_t* pcb) {
+    pcb_t* tutor = getTUTOR(pcb);
+
+    if(pcb == NULL || pcb == 0){
+        pcb = currentProcess;
+    } else if (isParent(pcb, currentProcess)){
+        return -1;
+    }
+    
+    if(pcb != NULL){
+        while(!emptyChild(pcb)){
+            pcb_t* child = removeChild(pcb);
+            insertChild(tutor, child);
         }
 
         outProcQ(&readyQueue, pcb);
         freePcb(pcb);
     }
 
-    schedule();
+    return 0;
+
+    //schedule();
 }
 
 // SYS4
@@ -44,7 +69,7 @@ void verhogen(int *sem) {
     }
 }
 
-// SYS4
+// SYS5
 void passeren(int *sem) {
     (*sem)--;
 
@@ -56,6 +81,12 @@ void passeren(int *sem) {
         currentProcess = NULL;
     }
 }
+
+//SYS6
+void waitClock(){
+    passeren(&semPseudoClock);
+}
+
 
 // SYS7
 void doIO(unsigned int command, int* reg) {
@@ -76,6 +107,13 @@ void doIO(unsigned int command, int* reg) {
     }
 }
 
+//SYS8
+void setTutor(){
+    if(currentProcess != NULL){
+        currentProcess->tutor = TRUE;
+    }
+}
+
 /**
   * @brief System calls and breakpoints handler, checks the cause and calls the right sub-handler
   * @return void.
@@ -88,11 +126,16 @@ void sysBpHandler() {
     unsigned int a0 = sysbp_old->reg_a0;
     unsigned int a1 = sysbp_old->reg_a1;
     unsigned int a2 = sysbp_old->reg_a2;
+    unsigned int a3 = sysbp_old->reg_a3;
 
     if (cause == EXC_SYS) {
         switch(a0) {
+            case CREATEPROCESS:
+                createProcess((state_t *) a1, (int) a2, (pcb_t *) a3);
+                break;
+
             case TERMINATEPROCESS:
-                terminateProcess(currentProcess);
+                terminateProcess((pcb_t*) a1);
                 break;
 
             case VERHOGEN:
@@ -101,6 +144,10 @@ void sysBpHandler() {
 
             case PASSEREN:
                 passeren((int *) a1);
+                break;
+
+            case WAITCLOCK:
+                waitClock();
                 break;
 
             case WAITIO:

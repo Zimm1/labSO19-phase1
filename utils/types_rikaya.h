@@ -28,6 +28,7 @@ typedef struct pcb_t {
 	int					*p_semkey;
 
 	int					cpu_time;
+	int					tutor;
 } pcb_t;
 
 

@@ -15,3 +15,33 @@ void copyState(state_t* src, state_t* dest) {
 		dest->gpr[i] = src->gpr[i];
 	}
 }
+
+pcb_t* getTUTOR(pcb_t* forefather){
+	if(forefather->p_parent == NULL){
+		return forefather;  
+	}
+	pcb_t* itr;
+	list_for_each_entry(itr, &forefather->p_child, p_sib) {
+		if(itr->tutor){
+			return itr;
+		}
+	}
+	return getTUTOR(forefather->p_parent);
+}
+
+int isParent(pcb_t* terminateProcess, pcb_t* currProcess){
+	if(currProcess != NULL){
+		pcb_t* itr;
+		int found;
+		list_for_each_entry(itr, &currProcess->p_child, p_sib){
+			if(itr == terminateProcess){
+				return TRUE;
+			} else {
+				found = isParent(terminateProcess, itr);
+			}
+		};
+		return found;
+	} else {
+		return FALSE;
+	}
+}
