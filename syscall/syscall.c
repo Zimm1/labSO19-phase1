@@ -11,12 +11,16 @@
 
 state_t* sysbp_old = (state_t*) SYSBK_OLDAREA;
 
-//SYS2
-HIDDEN int createProcess(state_t* statep, int priority, pcb_t* cpid){
+/**
+  * @brief (SYS2) Creates a new process.
+  * @param cpid : pointer to the process created, if created without error.
+  * @return Returns -1 if it's impossible to create the new process.
+ */
+HIDDEN void createProcess(state_t* statep, int priority, pcb_t* cpid){
     cpid = allocPcb();
 
     if(cpid == NULL){
-        return FALSE;
+        currentProcess->p_s.reg_a1 = -1;
     }
 
     cpid->tutor = FALSE;
@@ -27,19 +31,21 @@ HIDDEN int createProcess(state_t* statep, int priority, pcb_t* cpid){
     insertChild(currentProcess, cpid);
     insertProcQ(&readyQueue, cpid);
 
-    return TRUE;
+    currentProcess->p_s.reg_a1 = 0;
 }
 
 /**
-  * @brief (SYS3) Terminates a process and all of its children.
-  * @param pcb : Process to terminate.
-  * @return void.
+  * @brief (SYS3) Terminates a process and adds his children to the TUTOR.
+  * @param pcb : process to terminate, if the value of pcb is NULL terminates the current process.
+  * @return Returns -1 if the process to terminate don't come from currentProcess.
  */
-HIDDEN int terminateProcess(pcb_t* pcb) {
+HIDDEN void terminateProcess(pcb_t* pcb) {
     if(pcb == NULL || pcb == 0){
         pcb = currentProcess;
+        currentProcess = NULL;
     } else if (!isParent(pcb, currentProcess)){
-        return -1;
+        currentProcess->p_s.reg_a1 = -1;
+        return;
     }
     
     if(pcb != NULL){
@@ -53,7 +59,7 @@ HIDDEN int terminateProcess(pcb_t* pcb) {
         freePcb(pcb);
     }
 
-    return 0;
+    currentProcess->p_s.reg_a1 = 0;
 }
 
 // SYS4
@@ -80,7 +86,10 @@ void passeren(int *sem) {
     }
 }
 
-//SYS6
+/**
+  * @brief (SYS6) Suspends the process until the next tick of the system clock (100 ms).
+  * @return void.
+ */
 void waitClock(){
     passeren(&semPseudoClock);
 }
@@ -105,14 +114,40 @@ void doIO(unsigned int command, int* reg) {
     }
 }
 
-//SYS8
+/**
+  * @brief (SYS8) Marks the calling process as TUTOR.
+  * @return void.
+ */
 void setTutor(){
     if(currentProcess != NULL){
         currentProcess->tutor = TRUE;
     }
 }
 
-//SYS10
+/**
+  * @brief (SYS9) Sets the handler for a exception of a certain type.
+  * The possible values of type are:
+  * 0: SYS/Bp exception
+  * 1: TLB exception
+  * 2: PgmTrap exception
+  * @return 0 if the SYSCALL ends without error.
+ */
+void specPassup(int type, state_t* oldArea, state_t* newArea){
+    if(currentProcess->exceptionVector[type*2] != NULL){
+        terminateProcess(currentProcess);
+        currentProcess->p_s.reg_a1 = -1;
+    } else {
+        currentProcess->exceptionVector[type*2] = oldArea;
+        currentProcess->exceptionVector[type*2+1] = newArea;
+        currentProcess->p_s.reg_a1 = 0;
+    }
+}
+
+/**
+  * @brief (SYS10) Sets the pointer of the currentProcess to pid (if pid != NULL) and
+  *     the pointer of the parent process to ppid (if ppid != NULL).
+  * @return void.
+ */
 void getPid(pcb_t* pid, pcb_t* ppid){
     if(pid != NULL){
         pid = currentProcess;
@@ -138,6 +173,9 @@ void sysBpHandler() {
 
     if (cause == EXC_SYS) {
         switch(a0) {
+            case GETCPUTIME:
+                break;
+
             case CREATEPROCESS:
                 createProcess((state_t *) a1, (int) a2, (pcb_t *) a3);
                 break;
@@ -161,9 +199,15 @@ void sysBpHandler() {
             case WAITIO:
                 doIO(a1, (int *) a2);
                 break;
+
+            case SPECPASSUP:
+                specPassup((int) a1 ,(state_t*) a2, (state_t*) a3);
+                break;
+                
             case GETPID:
                 getPid((pcb_t*) a1, (pcb_t*) a2);
-
+                break;
+                
             default:
                 PANIC();
                 break;
