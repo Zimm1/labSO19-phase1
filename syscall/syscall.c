@@ -44,7 +44,7 @@ void verhogen(int *sem) {
     }
 }
 
-// SYS4
+// SYS5
 void passeren(int *sem) {
     (*sem)--;
 
@@ -54,38 +54,54 @@ void passeren(int *sem) {
 
         insertBlocked(sem, currentProcess);
         currentProcess = NULL;
+        
+        schedule();
     }
 }
+
+memaddr *semaphoreDevice;
+int line;
+int dev;
 
 // SYS7
 void doIO(unsigned int command, int* reg) {
-    *(reg + 3) = command;
+    //*(reg) = command;
+    ((devreg_t*)reg)->term.transm_command = command;
+    
+    line = DEV_LINE((int)reg);
+    dev = DEV_NUMBER((int)reg);
 
-    // TODO CHANGE
-    int line = 8;
-    int dev = 0;
+    semaphoreDevice = getSemDev(line, dev);
+    //memaddr *statusReg = getKernelStatusDev(line, dev);
 
-    memaddr *semaphoreDevice = getSemDev(line, dev);
-    memaddr *statusReg = getKernelStatusDev(line, dev);
-
-    if((*statusReg) != 0){
-        currentProcess->p_s.reg_a1 = (*statusReg);
-        (*statusReg) = 0;
-    } else {
-        passeren((int *) semaphoreDevice);
-    }
+    //if((*statusReg) != 0){
+    //    currentProcess->p_s.reg_a1 = (*statusReg);
+    //    (*statusReg) = 0;
+    //} else {
+    passeren((int *) semaphoreDevice);
+    //}
 }
+
+unsigned int cause;
+unsigned int a0;
 
 /**
   * @brief System calls and breakpoints handler, checks the cause and calls the right sub-handler
   * @return void.
  */
-void sysBpHandler() {
-    copyState(sysbp_old, &currentProcess->p_s);
-    currentProcess->p_s.pc_epc += WORD_SIZE;
 
-    unsigned int cause = CAUSE_EXCCODE_GET(sysbp_old->cause);
-    unsigned int a0 = sysbp_old->reg_a0;
+unsigned int sysStatus;
+
+void sysBpHandler() {
+    sysStatus = getSTATUS();
+
+    if (currentProcess != NULL) {
+        copyState(sysbp_old, &currentProcess->p_s);
+        currentProcess->p_s.pc_epc += WORD_SIZE;
+    }
+
+    cause = CAUSE_EXCCODE_GET(sysbp_old->cause);
+    a0 = sysbp_old->reg_a0;
     unsigned int a1 = sysbp_old->reg_a1;
     unsigned int a2 = sysbp_old->reg_a2;
 
@@ -100,7 +116,7 @@ void sysBpHandler() {
                 break;
 
             case PASSEREN:
-                passeren((int *) a1);
+                //passeren((int *) a1);
                 break;
 
             case WAITIO:
@@ -112,7 +128,7 @@ void sysBpHandler() {
                 break;
         }
 
-        schedule();
+        LDST(&currentProcess->p_s);
     } else {
         PANIC();
     }

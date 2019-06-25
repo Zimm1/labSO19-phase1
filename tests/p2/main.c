@@ -80,7 +80,11 @@ HIDDEN void initProcess(int index, memaddr address) {
     insertProcQ(&readyQueue, process);
 }
 
+state_t* trap_old = (state_t*) PGMTRAP_OLDAREA;
+unsigned int vmc;
+
 void trapHandler() {
+    vmc = CAUSE_EXCCODE_GET(trap_old->cause);
     PANIC();
 }
 

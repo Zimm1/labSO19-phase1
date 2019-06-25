@@ -11,21 +11,21 @@
 #include "syscall/syscall.h"
 
 HIDDEN void cpuTimerHandler() {
-	int *sem = &semCpuTimer;
-	if (sem != NULL) {
-		verhogen(sem);
+	setTIMER(SCHED_TIME_SLICE);
+	if (currentProcess != NULL) {
+		insertProcQ(&readyQueue, currentProcess);
 	}
 }
 
 HIDDEN void timerHandler() {
     if (isTimer(SCHED_PSEUDO_CLOCK)) {
-		while(semPseudoClock < 0){
+		while (semPseudoClock < 0) {
 			verhogen(&semPseudoClock);
 		}
 	}
 
 	if (isTimer(SCHED_TIME_SLICE)) {
-		if (currentProcess != NULL){
+		if (currentProcess != NULL) {
 			currentProcess->cpu_time += getTODLO() - process_TOD;
 			insertProcQ(&readyQueue, currentProcess);
 	    	currentProcess = NULL;
@@ -37,13 +37,15 @@ HIDDEN void interruptVerhogen(int *sem, int statusRegister, memaddr* kernelStatu
     pcb_t* first = removeBlocked(sem);
     (*sem)++;
 
-    if (first!=NULL) {
-        first-> p_s.reg_a1 = statusRegister;
+    if (first != NULL) {
+        first-> p_s.reg_v0 = statusRegister;
         first->p_semkey = NULL;
         insertProcQ(&readyQueue, first);
     } else {
-		(*kernelStatusDev) = statusRegister;
+        (*kernelStatusDev) = statusRegister;
     }
+
+    schedule();
 }
 
 HIDDEN void ackAndVerhogen(int intLine, int device, int statusReg, memaddr *commandReg){
@@ -90,13 +92,11 @@ HIDDEN void terminalHandler() {
 	memaddr* commandRegWrite  = (memaddr*) (terminalRegister + TRANCOMMAND * DEV_REG_LEN);
 
 	if (((*statusRegWrite) & 0x0F) == DEV_TTRS_S_CHARTRSM) {
-		ackAndVerhogen((IL_TERMINAL + 1), device, ((*statusRegWrite)), commandRegWrite);
+		ackAndVerhogen((IL_TERMINAL/* + 1*/), device, ((*statusRegWrite)), commandRegWrite);
 	} else if (((*statusRegRead) & 0x0F) == DEV_TRCV_S_CHARRECV) {
 		ackAndVerhogen(IL_TERMINAL, device, ((*statusRegRead)), commandRegRead);
 	}
 }
-
-int cause;
 
 /**
   * @brief Hanldes all interrupts, restores current process state and calls scheduler.
@@ -107,9 +107,9 @@ void intHandler() {
 		copyState((state_t*) INT_OLDAREA, &(currentProcess->p_s));
 	}
 
-	cause = getCAUSE();
+	int cause = getCAUSE();
 
-	if(CAUSE_IP_GET(cause, INT_T_SLICE)){
+	if (CAUSE_IP_GET(cause, INT_T_SLICE)) {
 		cpuTimerHandler();
 	} else if (CAUSE_IP_GET(cause, INT_TIMER)){
 		timerHandler();

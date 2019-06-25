@@ -43,26 +43,29 @@ HIDDEN void aging() {
 	}
 }
 
+void cpuIdle() {
+	setSTATUS(getSTATUS() | STATUS_IEc | STATUS_INT_UNMASKED);
+	setTIMER(SCHED_TIME_SLICE);
+	while(1) WAIT();
+}
+
 /**
   * @brief Removes from the queue of ready processes the PCB with highest priority and load his state in the CPU.
   * @return void.
  */
 void schedule() {
-	setNextTimer();
-	
-    if (currentProcess == NULL) {
-        if (!emptyProcQ(&readyQueue)) {
-            currentProcess = removeProcQ(&readyQueue);
-            /* Reset the priority of removed process to its original priority. */
-            currentProcess->priority = currentProcess->original_priority;
+    if (!emptyProcQ(&readyQueue)) {
+        currentProcess = removeProcQ(&readyQueue);
+        /* Reset the priority of removed process to its original priority. */
+        currentProcess->priority = currentProcess->original_priority;
 
-            aging();
-        } else {
-            WAIT();
-            return;
-        }
+        aging();
+
+        process_TOD = getTODLO();
+
+        setNextTimer();
+        LDST(&(currentProcess->p_s));
+    } else {
+        cpuIdle();
     }
-
-    process_TOD = getTODLO();
-    LDST(&(currentProcess->p_s));
 }
