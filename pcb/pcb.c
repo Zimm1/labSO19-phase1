@@ -50,6 +50,10 @@ pcb_t *allocPcb(void) {
 
 		p->priority = 0;
 		p->original_priority = 0;
+
+		for(int i = 0; i < 6; i++){
+			p->exceptionVector[i] = NULL;
+		}
 	}
 
 	return p;

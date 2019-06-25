@@ -18,7 +18,8 @@ typedef struct pcb_t {
 						p_sib;
 	
 	/* processor state, etc */
-	state_t       		p_s;     
+	state_t       		p_s;
+	state_t*			exceptionVector[6];     
 
 	/* process priority */
 	int					priority;
@@ -28,6 +29,7 @@ typedef struct pcb_t {
 	int					*p_semkey;
 
 	int					cpu_time;
+	int					tutor;
 } pcb_t;
 
 
