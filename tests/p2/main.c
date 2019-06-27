@@ -2,7 +2,7 @@
 #include <umps/libumps.h>
 
 #include "main.h"
-#include "p2test_rikaya_v0.1.h"
+#include "p2test_rikaya_v0.2.h"
 #include "pcb/pcb.h"
 #include "asl/asl.h"
 #include "scheduler/scheduler.h"
@@ -80,27 +80,15 @@ HIDDEN void initProcess(int index, memaddr address) {
     insertProcQ(&readyQueue, process);
 }
 
-state_t* trap_old = (state_t*) PGMTRAP_OLDAREA;
-unsigned int vmc;
-
-void trapHandler() {
-    vmc = CAUSE_EXCCODE_GET(trap_old->cause);
-    PANIC();
-}
-
-void tlbHandler() {
-    PANIC();
-}
-
 /**
   * @brief Initializes umps ROM areas.
   * @return void.
  */
 HIDDEN void initAreas() {
-    initArea(SYSBK_NEWAREA,  (memaddr) sysBpHandler);
-    initArea(INT_NEWAREA,    (memaddr) intHandler);
-    initArea(PGMTRAP_NEWAREA, (memaddr) trapHandler);
-    initArea(TLB_NEWAREA, (memaddr) tlbHandler);
+    initArea(SYSBK_NEWAREA,     (memaddr) sysBpHandler);
+    initArea(INT_NEWAREA,       (memaddr) intHandler);
+    initArea(PGMTRAP_NEWAREA,   (memaddr) trapHandler);
+    initArea(TLB_NEWAREA,       (memaddr) tlbHandler);
 }
 
 /**
@@ -132,6 +120,8 @@ int main() {
     initAreas();
     initProccesses();
     initAsl();
+
+    SET_IT(SCHED_PSEUDO_CLOCK);
     
     schedule();
 

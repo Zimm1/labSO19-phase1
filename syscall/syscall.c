@@ -11,25 +11,47 @@
 
 state_t* sysbp_old = (state_t*) SYSBK_OLDAREA;
 
+HIDDEN void getCpuTime(int* user, int* kernel, int* wallclock) {
+    if (user != NULL) {
+        *user = currentProcess->time_user;
+    }
+
+    if (kernel != NULL) {
+        *kernel = currentProcess->time_kernel;
+    }
+
+    if (wallclock != NULL) {
+        *wallclock = GET_TODLOW - currentProcess->time_start;
+    }
+}
+
 /**
   * @brief (SYS2) Creates a new process.
   * @param cpid : pointer to the process created, if created without error.
   * @return Returns -1 if it's impossible to create the new process.
  */
-HIDDEN void createProcess(state_t* statep, int priority, pcb_t* cpid){
-    cpid = allocPcb();
+HIDDEN void createProcess(state_t* statep, int priority, unsigned int* cpid){
+    pcb_t* pcb = allocPcb();
 
-    if(cpid == NULL){
+    if (pcb == NULL) {
         currentProcess->p_s.reg_a1 = -1;
     }
 
-    cpid->tutor = FALSE;
-    cpid->cpu_time = 0;
-    cpid->original_priority = cpid->priority = priority;
-    copyState(statep, &cpid->p_s);
+    pcb->tutor = FALSE;
+    pcb->time_start = 0;
+    pcb->time_user = 0;
+    pcb->time_kernel = 0;
+    pcb->original_priority = pcb->priority = priority;
+    copyState(statep, &pcb->p_s);
 
-    insertChild(currentProcess, cpid);
-    insertProcQ(&readyQueue, cpid);
+    insertChild(currentProcess, pcb);
+    lock(&MUTEX_SCHEDULER);
+    insertProcQ(&readyQueue, pcb);
+    unlock(&MUTEX_SCHEDULER);
+
+    if (cpid != NULL) {
+        *cpid = (unsigned int) pcb;
+    }
 
     currentProcess->p_s.reg_a1 = 0;
 }
@@ -39,53 +61,86 @@ HIDDEN void createProcess(state_t* statep, int priority, pcb_t* cpid){
   * @param pcb : process to terminate, if the value of pcb is NULL terminates the current process.
   * @return Returns -1 if the process to terminate don't come from currentProcess.
  */
+
+pcb_t* pcb3;
+pcb_t* parent;
+
+void addSem(pcb_t* pcb) {
+    *pcb->p_semkey =  *pcb->p_semkey + 1;
+}
+
 HIDDEN void terminateProcess(pcb_t* pcb) {
-    if(pcb == NULL || pcb == 0){
+    if (pcb == NULL || pcb == currentProcess) {
         pcb = currentProcess;
         currentProcess = NULL;
-    } else if (!isParent(pcb, currentProcess)){
+    } else if (!isParent(pcb, currentProcess)) {
         currentProcess->p_s.reg_a1 = -1;
         return;
     }
     
-    if(pcb != NULL){
+    if (pcb != NULL) {
+        pcb3 = pcb;
+        parent = pcb->p_parent;
         pcb_t* tutor = getTUTOR(pcb->p_parent);
-        while(!emptyChild(pcb)){
-            pcb_t* child = removeChild(pcb);
+        pcb_t* child;
+        while (child = removeChild(pcb)) {
             insertChild(tutor, child);
         }
 
         outProcQ(&readyQueue, pcb);
+        if (pcb->p_semkey != NULL) {
+            addSem(pcb);
+        }
+        outBlocked(pcb);
+        outChild(pcb);
+
         freePcb(pcb);
     }
 
-    currentProcess->p_s.reg_a1 = 0;
+    if (currentProcess != NULL) {
+        currentProcess->p_s.reg_a1 = 0;
+    }
 }
+
+HIDDEN void terminateProcessId(int* pid) {
+    terminateProcess(pid != NULL ? (pcb_t*) *pid : NULL);
+}
+
+unsigned int MUTEX_PV = 1;
 
 // SYS4
 void verhogen(int *sem) {
+    lock(&MUTEX_PV);
+
     (*sem)++;
     pcb_t* first = removeBlocked(sem);
 
     if (first != NULL) {
         first->p_semkey = NULL;
+        first->time_kernel += getTODLO() - process_TOD;
+        lock(&MUTEX_SCHEDULER);
         insertProcQ(&readyQueue, first);
+        unlock(&MUTEX_SCHEDULER);
     }
+
+    unlock(&MUTEX_PV);
 }
 
 // SYS5
 void passeren(int *sem) {
+    lock(&MUTEX_PV);
+
     (*sem)--;
 
     if ((*sem)<0) {
         currentProcess->p_semkey = sem;
-        currentProcess->cpu_time += getTODLO() - process_TOD;
+        currentProcess->time_kernel += getTODLO() - process_TOD;
 
         insertBlocked(sem, currentProcess);
         currentProcess = NULL;
-        
-        schedule();
     }
+
+    unlock(&MUTEX_PV);
 }
 
 /**
@@ -95,7 +150,6 @@ void passeren(int *sem) {
 void waitClock(){
     passeren(&semPseudoClock);
 }
-
 
 memaddr *semaphoreDevice;
 int line;
@@ -128,7 +182,7 @@ unsigned int a0;
   * @return void.
  */
 void setTutor(){
-    if(currentProcess != NULL){
+    if (currentProcess != NULL) {
         currentProcess->tutor = TRUE;
     }
 }
@@ -142,9 +196,9 @@ void setTutor(){
   * @return 0 if the SYSCALL ends without error.
  */
 void specPassup(int type, state_t* oldArea, state_t* newArea){
-    if(currentProcess->exceptionVector[type*2] != NULL){
+    if (currentProcess->exceptionVector[type*2] != NULL) {
         terminateProcess(currentProcess);
-        currentProcess->p_s.reg_a1 = -1;
+        // currentProcess->p_s.reg_a1 = -1;
     } else {
         currentProcess->exceptionVector[type*2] = oldArea;
         currentProcess->exceptionVector[type*2+1] = newArea;
@@ -157,12 +211,13 @@ void specPassup(int type, state_t* oldArea, state_t* newArea){
   *     the pointer of the parent process to ppid (if ppid != NULL).
   * @return void.
  */
-void getPid(pcb_t* pid, pcb_t* ppid){
-    if(pid != NULL){
-        pid = currentProcess;
+void getPid(unsigned int* pid, unsigned int* ppid){
+    if (pid != NULL) {
+        *pid = (unsigned int) currentProcess;
     }
-    if(ppid != NULL){
-        ppid = pid->p_parent;
+
+    if (ppid != NULL) {
+        *ppid = (unsigned int) currentProcess->p_parent;
     }
 }
 
@@ -172,13 +227,28 @@ void getPid(pcb_t* pid, pcb_t* ppid){
  */
 
 unsigned int sysStatus;
+unsigned int userMode;
 
 void sysBpHandler() {
-    sysStatus = getSTATUS();
-
     if (currentProcess != NULL) {
         copyState(sysbp_old, &currentProcess->p_s);
         currentProcess->p_s.pc_epc += WORD_SIZE;
+        currentProcess->time_user += getTODLO() - process_TOD;
+    }
+    process_TOD = getTODLO();
+
+    sysStatus = currentProcess->p_s.status;
+    userMode = isUserMode(currentProcess);
+
+    if (currentProcess->p_s.reg_a0 <= SYSCALL_MAX && isUserMode(currentProcess)) {
+		copyState((state_t*)SYSBK_OLDAREA, (state_t *)PGMTRAP_OLDAREA);
+
+		((state_t *)PGMTRAP_OLDAREA)->cause = CAUSE_EXCCODE_SET(
+            CAUSE_EXCCODE_GET(((state_t *)PGMTRAP_OLDAREA)->cause),
+            EXC_RESERVEDINSTR
+        );
+	
+        trapHandler();
     }
 
     cause = CAUSE_EXCCODE_GET(sysbp_old->cause);
@@ -190,14 +260,15 @@ void sysBpHandler() {
     if (cause == EXC_SYS) {
         switch(a0) {
             case GETCPUTIME:
+                getCpuTime((int *) a1, (int *) a2, (int *) a3);
                 break;
 
             case CREATEPROCESS:
-                createProcess((state_t *) a1, (int) a2, (pcb_t *) a3);
+                createProcess((state_t *) a1, (int) a2, (unsigned int*) a3);
                 break;
 
             case TERMINATEPROCESS:
-                terminateProcess((pcb_t*) a1);
+                terminateProcessId((int*) a1);
                 break;
 
             case VERHOGEN:
@@ -205,7 +276,7 @@ void sysBpHandler() {
                 break;
 
             case PASSEREN:
-                //passeren((int *) a1);
+                passeren((int *) a1);
                 break;
 
             case WAITCLOCK:
@@ -216,21 +287,63 @@ void sysBpHandler() {
                 doIO(a1, (int *) a2);
                 break;
 
+            case SETTUTOR:
+                setTutor();
+                break;
+
             case SPECPASSUP:
                 specPassup((int) a1 ,(state_t*) a2, (state_t*) a3);
                 break;
                 
             case GETPID:
-                getPid((pcb_t*) a1, (pcb_t*) a2);
+                getPid((unsigned int*) a1, (unsigned int*) a2);
                 break;
                 
             default:
-                PANIC();
+                if (currentProcess->exceptionVector[1] != NULL) {
+		            copyState((state_t*)SYSBK_OLDAREA, currentProcess->exceptionVector[0]);
+		            copyState(currentProcess->exceptionVector[1], &currentProcess->p_s);
+                    (currentProcess->exceptionVector[0])->pc_epc += WORD_SIZE;
+	            } else {
+		            terminateProcess(NULL);
+                }
                 break;
         }
 
-        LDST(&currentProcess->p_s);
+        if (currentProcess != NULL) {
+            currentProcess->time_kernel += getTODLO() - process_TOD;
+        }
+        process_TOD = getTODLO();
+
+        if (currentProcess != NULL) {
+            LDST(&currentProcess->p_s);
+        } else {
+            schedule();
+        }
     } else {
         PANIC();
+    }
+}
+
+void trapHandler() {
+	if (currentProcess->exceptionVector[5] != NULL) {
+		copyState((state_t*)PGMTRAP_OLDAREA, currentProcess->exceptionVector[4]);
+		copyState(currentProcess->exceptionVector[5], &currentProcess->p_s);
+
+		LDST(&currentProcess->p_s); 
+	} else {
+		terminateProcess(NULL);
+        schedule();
+    }
+}
+
+void tlbHandler() {
+    if (currentProcess->exceptionVector[3] != NULL) {
+		copyState((state_t*)TLB_OLDAREA, currentProcess->exceptionVector[2]);
+		copyState(currentProcess->exceptionVector[3], &currentProcess->p_s);
+
+		LDST(&currentProcess->p_s); 
+	} else {
+		terminateProcess(NULL);
     }
 }

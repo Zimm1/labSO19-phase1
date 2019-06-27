@@ -10,27 +10,32 @@
 #include "utils/utils.h"
 #include "syscall/syscall.h"
 
-HIDDEN void cpuTimerHandler() {
-	setTIMER(SCHED_TIME_SLICE);
+unsigned int MUTEX_CLOCK = 1;
+
+HIDDEN void pauseCurrentProcess() {
+	lock(&MUTEX_SCHEDULER);
 	if (currentProcess != NULL) {
 		insertProcQ(&readyQueue, currentProcess);
+		currentProcess->time_kernel += getTODLO() - process_TOD;
+		currentProcess = NULL;	
 	}
+	unlock(&MUTEX_SCHEDULER);
+}
+
+HIDDEN void cpuTimerHandler() {
+	setTIMER(SCHED_TIME_SLICE);
 }
 
 HIDDEN void timerHandler() {
-    if (isTimer(SCHED_PSEUDO_CLOCK)) {
-		while (semPseudoClock < 0) {
-			verhogen(&semPseudoClock);
-		}
+	lock(&MUTEX_CLOCK);
+
+	while (semPseudoClock < 0) {
+		verhogen(&semPseudoClock);
 	}
 
-	if (isTimer(SCHED_TIME_SLICE)) {
-		if (currentProcess != NULL) {
-			currentProcess->cpu_time += getTODLO() - process_TOD;
-			insertProcQ(&readyQueue, currentProcess);
-	    	currentProcess = NULL;
-		}
-	}
+	SET_IT(SCHED_PSEUDO_CLOCK);
+
+	unlock(&MUTEX_CLOCK);
 }
 
 HIDDEN void interruptVerhogen(int *sem, int statusRegister, memaddr* kernelStatusDev) {
@@ -40,12 +45,12 @@ HIDDEN void interruptVerhogen(int *sem, int statusRegister, memaddr* kernelStatu
     if (first != NULL) {
         first-> p_s.reg_v0 = statusRegister;
         first->p_semkey = NULL;
+				lock(&MUTEX_SCHEDULER);
         insertProcQ(&readyQueue, first);
+				unlock(&MUTEX_SCHEDULER);
     } else {
         (*kernelStatusDev) = statusRegister;
     }
-
-    schedule();
 }
 
 HIDDEN void ackAndVerhogen(int intLine, int device, int statusReg, memaddr *commandReg){
@@ -105,7 +110,9 @@ HIDDEN void terminalHandler() {
 void intHandler() {
 	if (currentProcess != NULL) {
 		copyState((state_t*) INT_OLDAREA, &(currentProcess->p_s));
+		currentProcess->time_user += getTODLO() - process_TOD;
 	}
+	process_TOD = getTODLO();
 
 	int cause = getCAUSE();
 
@@ -124,6 +131,8 @@ void intHandler() {
 	} else if (CAUSE_IP_GET(cause, INT_TERMINAL)){
 		terminalHandler();
 	}
+
+	pauseCurrentProcess();
 
 	schedule();
 }

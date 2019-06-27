@@ -6,11 +6,12 @@
 #include "tests/p2/main.h"
 #include "utils/const_rikaya.h"
 #include "utils/utils.h"
-#include "tests/p2/p2test_rikaya_v0.1.h"
 
 unsigned int slice_TOD = 0;
 unsigned int clock_TOD = 0;
 unsigned int process_TOD = 0;
+
+unsigned int MUTEX_SCHEDULER = 1;
 
 int isTimer(unsigned int TIMER_TYPE) {
     int time_until_timer;
@@ -72,8 +73,22 @@ void cpuIdle() {
   * @return void.
  */
 void schedule() {
+    lock(&MUTEX_SCHEDULER);
+
+    currentProcess = NULL;
+
+    setSTATUS(getSTATUS() & ~STATUS_IEc & ~STATUS_INT_UNMASKED);
+
+    // if ((currentProcess = removeProcQ(&readyQueue)) != NULL) {
     if (!emptyProcQ(&readyQueue)) {
         currentProcess = removeProcQ(&readyQueue);
+
+        unlock(&MUTEX_SCHEDULER);
+
+        if (currentProcess->time_start == 0) {
+            currentProcess->time_start = getTODLO();
+        }
+
         /* Reset the priority of removed process to its original priority. */
         currentProcess->priority = currentProcess->original_priority;
 
@@ -81,9 +96,12 @@ void schedule() {
 
         process_TOD = getTODLO();
 
-        setNextTimer();
+        // setNextTimer();
+        setTIMER(SCHED_TIME_SLICE);
         LDST(&(currentProcess->p_s));
     } else {
+        unlock(&MUTEX_SCHEDULER);
+
         cpuIdle();
     }
 }

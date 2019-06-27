@@ -29,7 +29,7 @@ typedef int S32;
 #define INT_MASK_ON_OR				0x0000FF15
 #define INT_TIMER_MASK_ON_OR	0x00000215
 #define VM_OFF_AND						0xF8FFFFFF
-#define KERNEL_ON_AND					0xFFFFFFD5
+#define USER_ON_OR					  0x0000000A
 #define TIMER_ON_OR						0x08000000
 
 /* Exc Cause */

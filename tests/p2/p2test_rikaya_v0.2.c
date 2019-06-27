@@ -20,10 +20,9 @@
  *      Modified by Mattia Maldini, Renzo Davoli 2019
  */
 
-#include "p2test_rikaya_v0.1.h"
+#include "p2test_rikaya_v0.2.h"
 #include "utils/const_rikaya.h"
 #include "utils/types_rikaya.h"
-//#include <types.h>
 #include <umps/libumps.h>
 #include <umps/arch.h>
 
@@ -47,7 +46,7 @@ typedef unsigned int pid_t;
 
 #define TERMSTATMASK	0xFF
 #define TERMCHARMASK	0xFF00
-#define CAUSEMASK		0xFFFFFF
+#define CAUSEMASK		0xFF
 #define VMOFF 			0xF8FFFFFF
 
 #define KUPBITON		0x8			//nota bene
@@ -492,7 +491,7 @@ void p4() {
 /* p5's program trap handler */
 void p5prog() {
 	unsigned int exeCode = pstat_o.cause;
-	exeCode = exeCode & CAUSEMASK;
+	exeCode = (exeCode & CAUSEMASK)>>2;
 
 	switch (exeCode) {
 		case EXC_BUSINVFETCH:
@@ -527,7 +526,7 @@ void p5prog() {
 void p5mm() {
 	print("memory management (tlb) trap - set user mode on\n");
 	mstat_o.status = mstat_o.status & 0xFFFFFFF0;  /* user mode on */
-	mstat_o.status &= ~(0x1); /* disable VM */
+	mstat_o.status &= VMOFF; /* disable VM */
 	mstat_o.pc_epc = (memaddr)p5b;  /* return to p5b */
 	mstat_o.reg_sp = p5Stack-FRAME_SIZE;				/* Start with a fresh stack */
 
@@ -590,7 +589,7 @@ void p5a() {
 	/* generate a TLB exception by turning on VM without setting up the 
 		 seg tables */
 	p5Status = getSTATUS();
-	p5Status = p5Status | 0x00000001;
+	p5Status = p5Status | 0x03000000;
 	setSTATUS(p5Status);
 }
 
@@ -624,8 +623,8 @@ void p5b() {
 	/* since this has already been      */
 	/* done for PROGTRAPs               */
 	if (SYSCALL(SPECPASSUP, 2, (int)&pstat_o, (int)&pstat_n) == 0) {
-		 print("error: double SPECPASSUP should not succeed\n");
-		 PANIC();
+		print("error: double SPECPASSUP should not succeed\n");
+		PANIC();
 	}
 
 	SYSCALL(TERMINATEPROCESS, 0, 0, 0);
@@ -734,10 +733,11 @@ void curiousleaf() {
 	pid_t parentid;
 	print("leaf process starts\n");
 
+	SYSCALL(GETPID, 0, (unsigned int)&parentid, 0);
 	if (SYSCALL(TERMINATEPROCESS, (int)&parentid, 0, 0) == 0) {
-    print("error: curiousleaf killed its parent\n");
-    PANIC();
-  }
+		print("error: curiousleaf killed its parent\n");
+		PANIC();
+	}
 
 	while (1) {
 		SYSCALL(GETPID, 0, (int)&parentid, 0);
@@ -750,7 +750,7 @@ void curiousleaf() {
 			PANIC();
 		}
 		print("curiousleaf waiting...\n");
-    SYSCALL(WAITCLOCK, 0, 0, 0);
+		SYSCALL(WAITCLOCK, 0, 0, 0);
 	}
 
 	SYSCALL(VERHOGEN, (int)&endcreate, 0, 0);
