@@ -38,9 +38,7 @@ HIDDEN void interruptVerhogen(int *sem, int statusRegister, memaddr* kernelStatu
     if (first != NULL) {
         first-> p_s.reg_v0 = statusRegister;
         first->p_semkey = NULL;
-				lock(&MUTEX_SCHEDULER);
         insertProcQ(&readyQueue, first);
-				unlock(&MUTEX_SCHEDULER);
     } else {
         (*kernelStatusDev) = statusRegister;
     }

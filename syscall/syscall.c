@@ -50,9 +50,7 @@ HIDDEN void createProcess(state_t* statep, int priority, unsigned int* cpid){
     copyState(statep, &pcb->p_s);
 
     insertChild(currentProcess, pcb);
-    lock(&MUTEX_SCHEDULER);
     insertProcQ(&readyQueue, pcb);
-    unlock(&MUTEX_SCHEDULER);
 
     if (cpid != NULL) {
         *cpid = (unsigned int) pcb;
@@ -122,9 +120,7 @@ void verhogen(int *sem) {
     if (first != NULL) {
         first->p_semkey = NULL;
         first->time_kernel += getTODLO() - process_TOD;
-        lock(&MUTEX_SCHEDULER);
         insertProcQ(&readyQueue, first);
-        unlock(&MUTEX_SCHEDULER);
     }
 
     unlock(&MUTEX_PV);

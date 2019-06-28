@@ -7,8 +7,6 @@
 #include "utils/const_rikaya.h"
 #include "utils/utils.h"
 
-unsigned int MUTEX_SCHEDULER = 1;
-
 /**
   * @brief Sets the timer of the closest event between the end of time slice or the system clock.
   * @return void.
@@ -69,16 +67,12 @@ void cpuIdle() {
   * @return void.
  */
 void schedule() {
-    lock(&MUTEX_SCHEDULER);
-
     currentProcess = NULL;
 
     setSTATUS(getSTATUS() & ~STATUS_IEc & ~STATUS_INT_UNMASKED);
 
     if (!emptyProcQ(&readyQueue)) {
         currentProcess = removeProcQ(&readyQueue);
-
-        unlock(&MUTEX_SCHEDULER);
 
         if (currentProcess->time_start == 0) {
             currentProcess->time_start = getTODLO();
@@ -89,8 +83,6 @@ void schedule() {
         setNextTimer();
         LDST(&(currentProcess->p_s));
     } else {
-        unlock(&MUTEX_SCHEDULER);
-
         cpuIdle();
     }
 }
