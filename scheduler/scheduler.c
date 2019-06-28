@@ -9,6 +9,28 @@
 
 unsigned int MUTEX_SCHEDULER = 1;
 
+/**
+  * @brief Sets the timer of the closest event between the end of time slice or the system clock.
+  * @return void.
+ */
+HIDDEN void setNextTimer(){
+    unsigned int TODLO = getTODLO();
+    int time_until_slice = SCHED_TIME_SLICE - (TODLO - slice_TOD);
+
+    if(time_until_slice<=0){
+        slice_TOD = TODLO;
+        time_until_slice= SCHED_TIME_SLICE;
+    }
+    
+    int time_until_clock = SCHED_PSEUDO_CLOCK - (TODLO - clock_TOD);
+    if(time_until_clock <= 0){
+        clock_TOD = TODLO;
+        time_until_clock = SCHED_PSEUDO_CLOCK;
+    }
+
+    setTIMER((time_until_slice <= time_until_clock) ? time_until_slice : time_until_clock);
+}
+
 int isTimer(unsigned int TIMER_TYPE) {
     int time_until_timer;
 
@@ -38,7 +60,7 @@ HIDDEN void aging() {
 
 void cpuIdle() {
 	setSTATUS(getSTATUS() | STATUS_IEc | STATUS_INT_UNMASKED);
-	setTIMER(SCHED_TIME_SLICE);
+	setNextTimer();
 	while(1) WAIT();
 }
 
@@ -64,7 +86,7 @@ void schedule() {
         currentProcess->priority = currentProcess->original_priority;
 
         aging();
-        setTIMER(SCHED_TIME_SLICE);
+        setNextTimer();
         LDST(&(currentProcess->p_s));
     } else {
         unlock(&MUTEX_SCHEDULER);
