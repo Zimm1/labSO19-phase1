@@ -12,7 +12,7 @@
 state_t* sysbp_old = (state_t*) SYSBK_OLDAREA;
 
 /**
-  * @brief (SYS1) Get aìthe CPU time.
+  * @brief (SYS1) Get the CPU time.
   * @param int : user time, kernel time and total time from first activation of the process.
   * @return void.
  */
@@ -109,7 +109,7 @@ HIDDEN void terminateProcessId(int* pid) {
 unsigned int MUTEX_PV = 1;
 
 /**
-  * @brief (SYS4) Operation of a V.
+  * @brief (SYS4) Operation V.
   * @param sem : semaphore that calls the V.
   * @return void.
  */
@@ -131,7 +131,7 @@ void verhogen(int *sem) {
 }
 
 /**
-  * @brief (SYS5) Operation of a P.
+  * @brief (SYS5) Operation P.
   * @param sem : semaphore that calls the P.
   * @return void.
  */
@@ -161,7 +161,7 @@ void waitClock(){
 
 
 /**
-  * @brief (SYS7) Active an operation of I/O.
+  * @brief (SYS7) Activates an operation of I/O.
   * @param int : command that will copy into reg.
   * @return void.
  */

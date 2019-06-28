@@ -10,16 +10,13 @@
 #include "utils/utils.h"
 #include "syscall/syscall.h"
 
-unsigned int MUTEX_CLOCK = 1;
 
 HIDDEN void pauseCurrentProcess() {
-	lock(&MUTEX_SCHEDULER);
 	if (currentProcess != NULL) {
 		insertProcQ(&readyQueue, currentProcess);
 		currentProcess->time_kernel += getTODLO() - process_TOD;
 		currentProcess = NULL;	
 	}
-	unlock(&MUTEX_SCHEDULER);
 }
 
 HIDDEN void cpuTimerHandler() {
@@ -27,15 +24,11 @@ HIDDEN void cpuTimerHandler() {
 }
 
 HIDDEN void timerHandler() {
-	lock(&MUTEX_CLOCK);
-
 	while (semPseudoClock < 0) {
 		verhogen(&semPseudoClock);
 	}
 
 	SET_IT(SCHED_PSEUDO_CLOCK);
-
-	unlock(&MUTEX_CLOCK);
 }
 
 HIDDEN void interruptVerhogen(int *sem, int statusRegister, memaddr* kernelStatusDev) {
