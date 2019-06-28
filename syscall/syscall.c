@@ -11,6 +11,11 @@
 
 state_t* sysbp_old = (state_t*) SYSBK_OLDAREA;
 
+/**
+  * @brief (SYS1) Get aìthe CPU time.
+  * @param int : user time, kernel time and total time from first activation of the process.
+  * @return void.
+ */
 HIDDEN void getCpuTime(int* user, int* kernel, int* wallclock) {
     if (user != NULL) {
         *user = currentProcess->time_user;
@@ -62,9 +67,6 @@ HIDDEN void createProcess(state_t* statep, int priority, unsigned int* cpid){
   * @return Returns -1 if the process to terminate don't come from currentProcess.
  */
 
-pcb_t* pcb3;
-pcb_t* parent;
-
 void addSem(pcb_t* pcb) {
     *pcb->p_semkey =  *pcb->p_semkey + 1;
 }
@@ -79,11 +81,9 @@ HIDDEN void terminateProcess(pcb_t* pcb) {
     }
     
     if (pcb != NULL) {
-        pcb3 = pcb;
-        parent = pcb->p_parent;
         pcb_t* tutor = getTUTOR(pcb->p_parent);
         pcb_t* child;
-        while (child = removeChild(pcb)) {
+        while ((child = removeChild(pcb))) {
             insertChild(tutor, child);
         }
 
@@ -108,7 +108,11 @@ HIDDEN void terminateProcessId(int* pid) {
 
 unsigned int MUTEX_PV = 1;
 
-// SYS4
+/**
+  * @brief (SYS4) Operation of a V.
+  * @param sem : semaphore that calls the V.
+  * @return void.
+ */
 void verhogen(int *sem) {
     lock(&MUTEX_PV);
 
@@ -126,7 +130,11 @@ void verhogen(int *sem) {
     unlock(&MUTEX_PV);
 }
 
-// SYS5
+/**
+  * @brief (SYS5) Operation of a P.
+  * @param sem : semaphore that calls the P.
+  * @return void.
+ */
 void passeren(int *sem) {
     lock(&MUTEX_PV);
 
@@ -151,31 +159,23 @@ void waitClock(){
     passeren(&semPseudoClock);
 }
 
-memaddr *semaphoreDevice;
-int line;
-int dev;
 
-// SYS7
+/**
+  * @brief (SYS7) Active an operation of I/O.
+  * @param int : command that will copy into reg.
+  * @return void.
+ */
 void doIO(unsigned int command, int* reg) {
-    //*(reg) = command;
     ((devreg_t*)reg)->term.transm_command = command;
     
-    line = DEV_LINE((int)reg);
-    dev = DEV_NUMBER((int)reg);
+    int line = DEV_LINE((int)reg);
+    int dev = DEV_NUMBER((int)reg);
 
-    semaphoreDevice = getSemDev(line, dev);
-    //memaddr *statusReg = getKernelStatusDev(line, dev);
-
-    //if((*statusReg) != 0){
-    //    currentProcess->p_s.reg_a1 = (*statusReg);
-    //    (*statusReg) = 0;
-    //} else {
+    memaddr *semaphoreDevice = getSemDev(line, dev);
+    
     passeren((int *) semaphoreDevice);
-    //}
 }
 
-unsigned int cause;
-unsigned int a0;
 
 /**
   * @brief (SYS8) Marks the calling process as TUTOR.
@@ -225,10 +225,6 @@ void getPid(unsigned int* pid, unsigned int* ppid){
   * @brief System calls and breakpoints handler, checks the cause and calls the right sub-handler
   * @return void.
  */
-
-unsigned int sysStatus;
-unsigned int userMode;
-
 void sysBpHandler() {
     if (currentProcess != NULL) {
         copyState(sysbp_old, &currentProcess->p_s);
@@ -236,9 +232,6 @@ void sysBpHandler() {
         currentProcess->time_user += getTODLO() - process_TOD;
     }
     process_TOD = getTODLO();
-
-    sysStatus = currentProcess->p_s.status;
-    userMode = isUserMode(currentProcess);
 
     if (currentProcess->p_s.reg_a0 <= SYSCALL_MAX && isUserMode(currentProcess)) {
 		copyState((state_t*)SYSBK_OLDAREA, (state_t *)PGMTRAP_OLDAREA);
@@ -251,8 +244,8 @@ void sysBpHandler() {
         trapHandler();
     }
 
-    cause = CAUSE_EXCCODE_GET(sysbp_old->cause);
-    a0 = sysbp_old->reg_a0;
+    unsigned int cause = CAUSE_EXCCODE_GET(sysbp_old->cause);
+    unsigned int a0 = sysbp_old->reg_a0;
     unsigned int a1 = sysbp_old->reg_a1;
     unsigned int a2 = sysbp_old->reg_a2;
     unsigned int a3 = sysbp_old->reg_a3;

@@ -10,13 +10,11 @@
 #include "interrupt/interrupt.h"
 #include "utils/const_rikaya.h"
 
-struct list_head readyQueue; /* Ready process list */
-pcb_t *currentProcess; /* Currently running process */
+struct list_head readyQueue;
+pcb_t *currentProcess;
 
-int semCpuTimer;
 int semDev[N_EXT_IL + 1][N_DEV_PER_IL];
 int statusDev[N_EXT_IL + 1][N_DEV_PER_IL];
-int semPseudoClock;
 
 memaddr* getSemDev(int line, int dev) {
     if (3 <= line && line <= 8 && 0 <= dev && dev <= 7) {
