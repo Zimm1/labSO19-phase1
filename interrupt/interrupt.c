@@ -44,7 +44,7 @@ HIDDEN void interruptVerhogen(int *sem, int statusRegister, memaddr* kernelStatu
     }
 }
 
-HIDDEN void ackAndVerhogen(int intLine, int device, int statusReg, memaddr *commandReg){
+HIDDEN void ackAndVerhogen(int intLine, int device, int statusReg, memaddr *commandReg) {
 	memaddr *semDev 		 = getSemDev(intLine, device);
 	memaddr *kernelStatusDev = getKernelStatusDev(intLine, device);
 

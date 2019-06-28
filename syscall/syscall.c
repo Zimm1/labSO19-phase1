@@ -73,7 +73,7 @@ HIDDEN void terminateProcess(pcb_t* pcb) {
     if (pcb == NULL || pcb == currentProcess) {
         pcb = currentProcess;
         currentProcess = NULL;
-    } else if (!isParent(pcb, currentProcess)) {
+    } else if (!isAncestor(pcb, currentProcess)) {
         currentProcess->p_s.reg_a1 = -1;
         return;
     }
@@ -104,16 +104,12 @@ HIDDEN void terminateProcessId(int* pid) {
     terminateProcess(pid != NULL ? (pcb_t*) *pid : NULL);
 }
 
-unsigned int MUTEX_PV = 1;
-
 /**
   * @brief (SYS4) Operation V.
   * @param sem : semaphore that calls the V.
   * @return void.
  */
 void verhogen(int *sem) {
-    lock(&MUTEX_PV);
-
     (*sem)++;
     pcb_t* first = removeBlocked(sem);
 
@@ -122,8 +118,6 @@ void verhogen(int *sem) {
         first->time_kernel += getTODLO() - process_TOD;
         insertProcQ(&readyQueue, first);
     }
-
-    unlock(&MUTEX_PV);
 }
 
 /**
@@ -132,8 +126,6 @@ void verhogen(int *sem) {
   * @return void.
  */
 void passeren(int *sem) {
-    lock(&MUTEX_PV);
-
     (*sem)--;
 
     if ((*sem)<0) {
@@ -143,8 +135,6 @@ void passeren(int *sem) {
         insertBlocked(sem, currentProcess);
         currentProcess = NULL;
     }
-
-    unlock(&MUTEX_PV);
 }
 
 /**
@@ -191,7 +181,7 @@ void setTutor(){
   * 2: PgmTrap exception
   * @return 0 if the SYSCALL ends without error.
  */
-void specPassup(int type, state_t* oldArea, state_t* newArea){
+void specPassup(int type, state_t* oldArea, state_t* newArea) {
     if (currentProcess->exceptionVector[type*2] != NULL) {
         terminateProcess(currentProcess);
         // currentProcess->p_s.reg_a1 = -1;
@@ -207,7 +197,7 @@ void specPassup(int type, state_t* oldArea, state_t* newArea){
   *     the pointer of the parent process to ppid (if ppid != NULL).
   * @return void.
  */
-void getPid(unsigned int* pid, unsigned int* ppid){
+void getPid(unsigned int* pid, unsigned int* ppid) {
     if (pid != NULL) {
         *pid = (unsigned int) currentProcess;
     }

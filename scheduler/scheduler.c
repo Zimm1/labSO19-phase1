@@ -11,7 +11,7 @@
   * @brief Sets the timer of the closest event between the end of time slice or the system clock.
   * @return void.
  */
-HIDDEN void setNextTimer(){
+HIDDEN void setNextTimer() {
     unsigned int TODLO = getTODLO();
     int time_until_slice = SCHED_TIME_SLICE - (TODLO - slice_TOD);
 

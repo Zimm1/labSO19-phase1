@@ -31,7 +31,7 @@ pcb_t* getTUTOR(pcb_t* forefather){
 /**
   * @brief Checks if the process to terminate comes from currProcess.
  */
-int isParent(pcb_t* terminateProcess, pcb_t* currProcess) {
+int isAncestor(pcb_t* terminateProcess, pcb_t* currProcess) {
 	if (terminateProcess == currProcess) {
 		return TRUE;
 	}
@@ -40,16 +40,9 @@ int isParent(pcb_t* terminateProcess, pcb_t* currProcess) {
 		return FALSE;
 	}
 
-	return isParent(terminateProcess->p_parent, currProcess);
+	return isAncestor(terminateProcess->p_parent, currProcess);
 }
 
 int isUserMode(pcb_t* process) {
 	return ((process->p_s.status & 0x2) >> 1);
-}
-
-void lock(unsigned int* sem) {
-	while (!CAS(sem,1,0));
-}
-void unlock(unsigned int* sem) {
-	CAS(sem,0,1);
 }
