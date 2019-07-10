@@ -16,6 +16,10 @@ pcb_t *currentProcess;
 int semDev[N_EXT_IL + 1][N_DEV_PER_IL];
 int statusDev[N_EXT_IL + 1][N_DEV_PER_IL];
 
+/**
+  * @brief Get the semaphore device.
+  * @return memaddr or NULL.
+ */
 memaddr* getSemDev(int line, int dev) {
     if (3 <= line && line <= 8 && 0 <= dev && dev <= 7) {
         return (memaddr *) &semDev[line - DEV_IL_START][(N_DEV_PER_IL-1) -dev];
@@ -24,8 +28,12 @@ memaddr* getSemDev(int line, int dev) {
     return NULL;
 }
 
+/**
+  * @brief Get the status kernel of the device.
+  * @return memaddr or NULL.
+ */
 memaddr* getKernelStatusDev(int line, int dev) {
-    if(3 <= line  && line <= 8 && 0 <= dev && dev <= 7) {
+    if (3 <= line  && line <= 8 && 0 <= dev && dev <= 7) {
         return (memaddr *) &statusDev[line - DEV_IL_START][(N_DEV_PER_IL-1) -dev];
     }
     
@@ -33,7 +41,7 @@ memaddr* getKernelStatusDev(int line, int dev) {
 }
 
 /**
-  * @brief Disables interrupts and vm, enables kernel mode and local timer
+  * @brief Disables interrupts and vm, enables kernel mode and local timer.
   * @return void.
  */
 HIDDEN void initAreaStatus(state_t* state) {
@@ -41,7 +49,7 @@ HIDDEN void initAreaStatus(state_t* state) {
 }
 
 /**
-  * @brief Disables vm, enables all interrupts, kernel mode and local timer
+  * @brief Disables vm, enables all interrupts, kernel mode and local timer.
   * @return void.
  */
 HIDDEN void initProcessStatus(state_t* state) {

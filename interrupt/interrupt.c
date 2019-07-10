@@ -57,7 +57,7 @@ HIDDEN int getHighestPriorityDev(memaddr* line) {
 	int activeBit = 0x00000001;
 
 	for (int i = 0; i < 8; i++) {
-		if(((*line)&activeBit) == activeBit) {
+		if (((*line)&activeBit) == activeBit) {
 			return i;
 		}
 		activeBit = activeBit << 1;
@@ -109,17 +109,17 @@ void intHandler() {
 
 	if (CAUSE_IP_GET(cause, INT_T_SLICE)) {
 		cpuTimerHandler();
-	} else if (CAUSE_IP_GET(cause, INT_TIMER)){
+	} else if (CAUSE_IP_GET(cause, INT_TIMER)) {
 		timerHandler();
-	} else if (CAUSE_IP_GET(cause, INT_DISK)){
+	} else if (CAUSE_IP_GET(cause, INT_DISK)) {
 		genericDevHandler(INT_DISK);
-	} else if (CAUSE_IP_GET(cause, INT_TAPE)){
+	} else if (CAUSE_IP_GET(cause, INT_TAPE)) {
 		genericDevHandler(INT_TAPE);
-	} else if (CAUSE_IP_GET(cause, INT_UNUSED)){
+	} else if (CAUSE_IP_GET(cause, INT_UNUSED)) {
 		genericDevHandler(INT_UNUSED);
-	} else if (CAUSE_IP_GET(cause, INT_PRINTER)){
+	} else if (CAUSE_IP_GET(cause, INT_PRINTER)) {
 		genericDevHandler(INT_PRINTER);
-	} else if (CAUSE_IP_GET(cause, INT_TERMINAL)){
+	} else if (CAUSE_IP_GET(cause, INT_TERMINAL)) {
 		terminalHandler();
 	}
 

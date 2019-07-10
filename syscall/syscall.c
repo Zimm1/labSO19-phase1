@@ -141,7 +141,7 @@ void passeren(int *sem) {
   * @brief (SYS6) Suspends the process until the next tick of the system clock (100 ms).
   * @return void.
  */
-void waitClock(){
+void waitClock() {
     passeren(&semPseudoClock);
 }
 
@@ -167,7 +167,7 @@ void doIO(unsigned int command, int* reg) {
   * @brief (SYS8) Marks the calling process as TUTOR.
   * @return void.
  */
-void setTutor(){
+void setTutor() {
     if (currentProcess != NULL) {
         currentProcess->tutor = TRUE;
     }

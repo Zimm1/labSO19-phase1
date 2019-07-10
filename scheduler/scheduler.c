@@ -15,13 +15,13 @@ HIDDEN void setNextTimer() {
     unsigned int TODLO = getTODLO();
     int time_until_slice = SCHED_TIME_SLICE - (TODLO - slice_TOD);
 
-    if(time_until_slice<=0){
+    if (time_until_slice<=0) {
         slice_TOD = TODLO;
         time_until_slice= SCHED_TIME_SLICE;
     }
     
     int time_until_clock = SCHED_PSEUDO_CLOCK - (TODLO - clock_TOD);
-    if(time_until_clock <= 0){
+    if (time_until_clock <= 0) {
         clock_TOD = TODLO;
         time_until_clock = SCHED_PSEUDO_CLOCK;
     }
@@ -29,20 +29,23 @@ HIDDEN void setNextTimer() {
     setTIMER((time_until_slice <= time_until_clock) ? time_until_slice : time_until_clock);
 }
 
+/**
+  * @brief set the timer.
+  * @return 1 if timer is less than 0, 0. in any other case.
+ */
 int isTimer(unsigned int TIMER_TYPE) {
     int time_until_timer;
 
-    if(TIMER_TYPE == SCHED_TIME_SLICE){
+    if (TIMER_TYPE == SCHED_TIME_SLICE) {
         time_until_timer= TIMER_TYPE - (getTODLO());
-    } else if(TIMER_TYPE == SCHED_PSEUDO_CLOCK){
+    } else if (TIMER_TYPE == SCHED_PSEUDO_CLOCK) {
         time_until_timer= TIMER_TYPE - (getTODLO());
     }
 
-    if(time_until_timer <= 0){
+    if (time_until_timer <= 0) {
         return TRUE;
-    } else { 
-        return FALSE;
-    }
+    }        
+    return FALSE;
 }
 
 /**
@@ -56,10 +59,15 @@ HIDDEN void aging() {
 	}
 }
 
-void cpuIdle() {
+/**
+  * @brief Call the idle process.
+  * @return void.
+ */
+HIDDEN void cpuIdle() {
 	setSTATUS(getSTATUS() | STATUS_IEc | STATUS_INT_UNMASKED);
 	setNextTimer();
-	while(1) WAIT();
+	while(1) 
+        WAIT();
 }
 
 /**
